@@ -1,0 +1,159 @@
+name: Build Android App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+    inputs:
+      flavor:
+        description: 'Flavor to build'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - stable
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Necessary for tag versioning
+
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    - name: Calculate Version
+      id: version
+      run: |
+        # Fetch tags
+        git fetch --tags --force
+
+        LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+        VERSION_BASE=${LATEST_TAG#v}
+        COMMIT_COUNT=$(git rev-list --count HEAD)
+
+        if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+          # Stable Release from Tag
+          VERSION_NAME=${GITHUB_REF#refs/tags/v}
+          VERSION_CODE=$COMMIT_COUNT
+          IS_STABLE=true
+          echo "Building Stable Release: $VERSION_NAME ($VERSION_CODE)"
+        elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+          # PR Build
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+          VERSION_NAME="${VERSION_BASE}-beta-PR${PR_NUMBER}.${PR_COMMITS}"
+          VERSION_CODE=$COMMIT_COUNT
+          IS_STABLE=false
+          echo "Building PR Dev Build: $VERSION_NAME ($VERSION_CODE)"
+        else
+          # Manual or Push to Dev
+          RUN_NUMBER=${{ github.run_number }}
+          VERSION_NAME="${VERSION_BASE}-beta-run${RUN_NUMBER}"
+          VERSION_CODE=$COMMIT_COUNT
+          IS_STABLE=false
+          if [[ "${{ inputs.flavor }}" == "stable" ]]; then
+             IS_STABLE=true
+             echo "Building Manual Stable Build: $VERSION_NAME"
+          else
+             echo "Building Manual Dev Build: $VERSION_NAME"
+          fi
+        fi
+
+        echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_ENV
+        echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_ENV
+        echo "IS_STABLE=$IS_STABLE" >> $GITHUB_ENV
+
+    - name: Decode Keystore
+      if: env.IS_STABLE == 'true' || github.event_name != 'pull_request'
+      run: |
+        if [ -n "${{ secrets.KEYSTORE_BASE64 }}" ]; then
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+          echo "STORE_FILE=$(pwd)/keystore.jks" >> $GITHUB_ENV
+        else
+          echo "No keystore secret found. Skipping signing configuration."
+        fi
+
+    - name: Lint
+      run: ./gradlew lint
+
+    - name: Unit Tests
+      run: ./gradlew test
+
+    - name: Build Dev Flavor
+      if: env.IS_STABLE == 'false'
+      env:
+        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        ./gradlew assembleDevDebug assembleDevRelease \
+          -PversionCode=$VERSION_CODE \
+          -PversionName="$VERSION_NAME" > build_dev.log 2>&1 || (cat build_dev.log && exit 1)
+
+    - name: Build Stable Flavor
+      if: env.IS_STABLE == 'true'
+      env:
+        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      run: |
+        ./gradlew bundleStableRelease assembleStableRelease \
+          -PversionCode=$VERSION_CODE \
+          -PversionName="$VERSION_NAME" > build_stable.log 2>&1 || (cat build_stable.log && exit 1)
+
+    - name: Generate Short Logs
+      if: always()
+      run: |
+        for log in build_*.log; do
+          if [ -f "$log" ]; then
+            echo "--- HEAD ---" > "${log}.short.txt"
+            head -n 100 "$log" >> "${log}.short.txt"
+            echo "--- TAIL ---" >> "${log}.short.txt"
+            tail -n 100 "$log" >> "${log}.short.txt"
+          fi
+        done
+
+    - name: Upload Logs
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-logs
+        path: |
+          *.log
+          *.short.txt
+          app/build/reports/lint-results-*.html
+          app/build/reports/tests/test*UnitTest/index.html
+
+    - name: Upload APKs (Dev)
+      if: env.IS_STABLE == 'false'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-dev-${{ env.VERSION_NAME }}
+        path: |
+          app/build/outputs/apk/dev/debug/*.apk
+          app/build/outputs/apk/dev/release/*.apk
+
+    - name: Upload Bundle & APK (Stable)
+      if: env.IS_STABLE == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: app-stable-${{ env.VERSION_NAME }}
+        path: |
+          app/build/outputs/bundle/stableRelease/*.aab
+          app/build/outputs/apk/stable/release/*.apk
