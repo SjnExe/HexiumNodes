@@ -16,6 +16,7 @@ android {
     signingConfigs {
         create("release") {
             val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val debugKeystoreFile = rootProject.file("debug.keystore")
             val storeFileEnv = System.getenv("STORE_FILE")
 
             if (storeFileEnv != null) {
@@ -33,6 +34,12 @@ android {
                 storePassword = properties.getProperty("storePassword")
                 keyAlias = properties.getProperty("keyAlias")
                 keyPassword = properties.getProperty("keyPassword")
+            } else if (debugKeystoreFile.exists()) {
+                // CI/Local Fallback: Use debug.keystore if present (e.g. PR builds)
+                storeFile = debugKeystoreFile
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
             }
         }
     }
