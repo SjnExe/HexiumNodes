@@ -7,7 +7,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -64,8 +63,9 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("home") {
+                            val mainViewModel: MainViewModel = hiltViewModel()
                             HomeScreen(
-                                // Pass MainViewModel if needed for home
+                                viewModel = mainViewModel
                             )
                         }
                         composable("settings") {
