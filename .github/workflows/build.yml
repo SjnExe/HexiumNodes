@@ -219,14 +219,6 @@ jobs:
             app/build/outputs/bundle/stableRelease/*.aab
             app/build/outputs/apk/stable/release/*.apk
 
-  test_arm:
-    runs-on: ubuntu-latest
-    needs: build
-    if: needs.setup.outputs.IS_STABLE == 'false'
-    steps:
-      - name: Placeholder for ARM64 Tests
-        run: echo "Skipping ARM64 tests as no runner is configured yet."
-
   release:
     runs-on: ubuntu-latest
     needs: [setup, build]
