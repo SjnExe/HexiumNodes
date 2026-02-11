@@ -8,14 +8,10 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.mockito.ArgumentMatchers.anyBoolean
-import org.mockito.ArgumentMatchers.anyFloat
-import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anySet
-import org.mockito.ArgumentMatchers.anyString
-import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
+import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.whenever
 
 class MockAdRepositoryTest {
 
@@ -26,29 +22,25 @@ class MockAdRepositoryTest {
 
     @Before
     fun setup() {
-        context = mock(Context::class.java)
-        sharedPreferences = mock(SharedPreferences::class.java)
-        editor = mock(SharedPreferences.Editor::class.java)
+        context = mock()
+        sharedPreferences = mock()
+        editor = mock()
 
-        `when`(context.getSharedPreferences(anyString(), anyInt()))
-            .thenReturn(sharedPreferences)
+        // Use mockito-kotlin's whenever and any
+        whenever(context.getSharedPreferences(any(), any())).thenReturn(sharedPreferences)
 
-        `when`(sharedPreferences.edit()).thenReturn(editor)
-        `when`(editor.putStringSet(anyString(), anySet())).thenReturn(editor)
-        `when`(editor.putFloat(anyString(), anyFloat())).thenReturn(editor)
-        `when`(editor.putBoolean(anyString(), anyBoolean())).thenReturn(editor)
-        `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
-        `when`(editor.remove(anyString())).thenReturn(editor)
+        whenever(sharedPreferences.edit()).thenReturn(editor)
+        whenever(editor.putStringSet(any(), any())).thenReturn(editor)
+        whenever(editor.putFloat(any(), any())).thenReturn(editor)
+        whenever(editor.putBoolean(any(), any())).thenReturn(editor)
+        whenever(editor.putString(any(), any())).thenReturn(editor)
+        whenever(editor.remove(any())).thenReturn(editor)
 
-        // Fix: Use simple do-nothing answer for apply
-        `when`(editor.apply()).thenAnswer { }
-
-        // Setup default behaviors to avoid NPEs or strict stubbing errors
-        // Note: We use specific keys in tests, but fallbacks here are good
-        `when`(sharedPreferences.getStringSet(anyString(), anySet())).thenReturn(emptySet())
-        `when`(sharedPreferences.getFloat(anyString(), anyFloat())).thenReturn(0.0f)
-        `when`(sharedPreferences.getBoolean(anyString(), anyBoolean())).thenReturn(false)
-        `when`(sharedPreferences.getString(anyString(), org.mockito.ArgumentMatchers.nullable(String::class.java))).thenReturn(null)
+        // Setup default return values
+        whenever(sharedPreferences.getStringSet(any(), any())).thenReturn(emptySet())
+        whenever(sharedPreferences.getFloat(any(), any())).thenReturn(0.0f)
+        whenever(sharedPreferences.getBoolean(any(), any())).thenReturn(false)
+        whenever(sharedPreferences.getString(any(), any())).thenReturn(null)
 
         repository = MockAdRepository(context)
     }
@@ -56,9 +48,8 @@ class MockAdRepositoryTest {
     @Test
     fun `watchAd increases credits and history`() = runBlocking {
         // Given
-        // Overwrite specific keys needed for this test
-        `when`(sharedPreferences.getFloat(eq("credits"), anyFloat())).thenReturn(10.0f)
-        `when`(sharedPreferences.getStringSet(eq("ad_history"), anySet())).thenReturn(emptySet())
+        whenever(sharedPreferences.getFloat(eq("credits"), any())).thenReturn(10.0f)
+        whenever(sharedPreferences.getStringSet(eq("ad_history"), any())).thenReturn(emptySet())
 
         // When
         val result = repository.watchAd()
@@ -70,7 +61,7 @@ class MockAdRepositoryTest {
     @Test
     fun `getAvailableAds returns max when empty history`() = runBlocking {
         // Given
-        `when`(sharedPreferences.getStringSet(eq("ad_history"), anySet())).thenReturn(emptySet())
+        whenever(sharedPreferences.getStringSet(eq("ad_history"), any())).thenReturn(emptySet())
 
         // When
         val available = repository.getAvailableAds()
