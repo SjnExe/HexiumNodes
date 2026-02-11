@@ -132,18 +132,16 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
           IS_STABLE: ${{ needs.setup.outputs.IS_STABLE }}
         run: |
-          # Only use production keystore for Stable builds to avoid password issues on Dev builds
-          if [ "$IS_STABLE" == "true" ] && [ -n "$KEYSTORE_BASE64" ]; then
+          if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
             echo "STORE_FILE=$(pwd)/keystore.jks" >> $GITHUB_ENV
           elif [ "$IS_STABLE" == "true" ]; then
             echo "::error::Stable build triggered but KEYSTORE_BASE64 secret is missing!"
             exit 1
           else
-            echo "Using temporary debug keystore for Dev build (bypassing potentially invalid production secrets)..."
+            echo "Keystore secret missing. Generating temporary debug keystore for Dev build..."
             keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
             echo "Using generated debug.keystore for signing."
-            # Do NOT set STORE_FILE env var, so build.gradle.kts falls back to debug.keystore automatically
           fi
 
       - name: Build Dev Flavor
