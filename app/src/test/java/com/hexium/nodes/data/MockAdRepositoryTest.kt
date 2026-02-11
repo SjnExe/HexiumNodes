@@ -11,7 +11,6 @@ import org.junit.Test
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.ArgumentMatchers.anyInt
-import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anySet
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
@@ -40,20 +39,16 @@ class MockAdRepositoryTest {
         `when`(editor.putBoolean(anyString(), anyBoolean())).thenReturn(editor)
         `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
         `when`(editor.remove(anyString())).thenReturn(editor)
+
+        // Fix: Use simple do-nothing answer for apply
         `when`(editor.apply()).thenAnswer { }
 
-        // Mock default values for getStringSet
-        `when`(sharedPreferences.getStringSet(anyString(), anySet())).thenAnswer { invocation ->
-            invocation.arguments[1]
-        }
-         // Mock default values for getFloat
-        `when`(sharedPreferences.getFloat(anyString(), anyFloat())).thenAnswer { invocation ->
-            invocation.arguments[1]
-        }
-         // Mock default values for getBoolean
-        `when`(sharedPreferences.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation ->
-            invocation.arguments[1]
-        }
+        // Setup default behaviors to avoid NPEs or strict stubbing errors
+        // Note: We use specific keys in tests, but fallbacks here are good
+        `when`(sharedPreferences.getStringSet(anyString(), anySet())).thenReturn(emptySet())
+        `when`(sharedPreferences.getFloat(anyString(), anyFloat())).thenReturn(0.0f)
+        `when`(sharedPreferences.getBoolean(anyString(), anyBoolean())).thenReturn(false)
+        `when`(sharedPreferences.getString(anyString(), org.mockito.ArgumentMatchers.nullable(String::class.java))).thenReturn(null)
 
         repository = MockAdRepository(context)
     }
@@ -61,6 +56,7 @@ class MockAdRepositoryTest {
     @Test
     fun `watchAd increases credits and history`() = runBlocking {
         // Given
+        // Overwrite specific keys needed for this test
         `when`(sharedPreferences.getFloat(eq("credits"), anyFloat())).thenReturn(10.0f)
         `when`(sharedPreferences.getStringSet(eq("ad_history"), anySet())).thenReturn(emptySet())
 
