@@ -1,8 +1,6 @@
 package com.hexium.nodes.data
 
-import android.content.Context
 import android.content.SharedPreferences
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -10,12 +8,8 @@ import javax.inject.Singleton
 
 @Singleton
 class MockAdRepository @Inject constructor(
-    @param:ApplicationContext private val context: Context
+    private val prefs: SharedPreferences
 ) : AdRepository {
-
-    private val prefs: SharedPreferences by lazy {
-        context.getSharedPreferences("hexium_prefs", Context.MODE_PRIVATE)
-    }
 
     private val MAX_ADS = 50
     private val REGEN_TIME_MS = 24 * 60 * 60 * 1000L // 24 hours
