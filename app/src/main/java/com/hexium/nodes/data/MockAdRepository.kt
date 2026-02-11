@@ -10,7 +10,7 @@ import javax.inject.Singleton
 
 @Singleton
 class MockAdRepository @Inject constructor(
-    @ApplicationContext private val context: Context
+    @param:ApplicationContext private val context: Context
 ) : AdRepository {
 
     private val prefs: SharedPreferences by lazy {
