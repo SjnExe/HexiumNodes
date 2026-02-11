@@ -98,7 +98,7 @@ jobs:
         env:
           VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
           VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
-        run: ./gradlew testDebugUnitTest
+        run: ./gradlew testDevDebugUnitTest
 
       - name: Upload Test Reports
         if: always()
