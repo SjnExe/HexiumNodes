@@ -153,9 +153,10 @@ jobs:
           VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
           VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
         run: |
+          set -o pipefail
           ./gradlew assembleDevRelease assembleDevDebug \
             -PversionCode=$VERSION_CODE \
-            -PversionName="$VERSION_NAME" > build_dev.log 2>&1 || (cat build_dev.log && exit 1)
+            -PversionName="$VERSION_NAME" | tee build_dev.log
 
       - name: Build Stable Flavor
         if: needs.setup.outputs.IS_STABLE == 'true'
@@ -166,9 +167,10 @@ jobs:
           VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
           VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
         run: |
+          set -o pipefail
           ./gradlew bundleStableRelease assembleStableRelease \
             -PversionCode=$VERSION_CODE \
-            -PversionName="$VERSION_NAME" > build_stable.log 2>&1 || (cat build_stable.log && exit 1)
+            -PversionName="$VERSION_NAME" | tee build_stable.log
 
       - name: Generate Short Logs
         if: always()
