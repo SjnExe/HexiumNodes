@@ -9,6 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.doNothing
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
@@ -26,7 +27,6 @@ class MockAdRepositoryTest {
         sharedPreferences = mock()
         editor = mock()
 
-        // Use mockito-kotlin's whenever and any
         whenever(context.getSharedPreferences(any(), any())).thenReturn(sharedPreferences)
 
         whenever(sharedPreferences.edit()).thenReturn(editor)
@@ -35,6 +35,9 @@ class MockAdRepositoryTest {
         whenever(editor.putBoolean(any(), any())).thenReturn(editor)
         whenever(editor.putString(any(), any())).thenReturn(editor)
         whenever(editor.remove(any())).thenReturn(editor)
+
+        // Fix: Use doNothing().when(...) for void methods like apply()
+        doNothing().whenever(editor).apply()
 
         // Setup default return values
         whenever(sharedPreferences.getStringSet(any(), any())).thenReturn(emptySet())
