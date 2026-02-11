@@ -16,6 +16,7 @@ android {
     signingConfigs {
         create("release") {
             val keystorePropertiesFile = rootProject.file("keystore.properties")
+            val debugKeystoreFile = rootProject.file("debug.keystore")
             val storeFileEnv = System.getenv("STORE_FILE")
 
             if (storeFileEnv != null) {
@@ -33,6 +34,12 @@ android {
                 storePassword = properties.getProperty("storePassword")
                 keyAlias = properties.getProperty("keyAlias")
                 keyPassword = properties.getProperty("keyPassword")
+            } else if (debugKeystoreFile.exists()) {
+                // CI/Local Fallback: Use debug.keystore if present (e.g. PR builds)
+                storeFile = debugKeystoreFile
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
             }
         }
     }
@@ -135,6 +142,15 @@ dependencies {
 
     // Ads
     implementation(libs.play.services.ads)
+
+    // Security & Persistence
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.google.android.play:integrity:1.3.0")
+
+    // Debugging (Dev only)
+    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
 
     // Testing
     testImplementation(libs.junit)
