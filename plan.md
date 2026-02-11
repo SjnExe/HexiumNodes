@@ -8,57 +8,58 @@
 - **Architecture:** MVVM + Clean Architecture (Data, Domain, UI)
 - **Tech Stack:** Kotlin, Jetpack Compose, Hilt, Room, Retrofit.
 
-## 2. Repository Structure
-```
-/
-├── .github/workflows/   # CI/CD Workflows
-├── app/                 # Android App Module
-│   ├── src/main/java/   # Source Code (MVVM)
-│   ├── src/dev/         # Dev-specific configs
-│   └── src/stable/      # Stable-specific configs
-├── gradle/              # Gradle Wrapper & Version Catalog
-└── keystore.properties  # Local signing keys (Ignored)
-```
+## 2. Recent Progress & Current State
+### 2.1 Completed
+- **CI/CD Refactor:**
+    - Split into `setup`, `lint`, `build`, `test_arm`, `release` jobs.
+    - Implemented "floating dev tag" strategy for Dev releases.
+    - Added real-time logging (`tee`) to CI.
+    - Signing logic: Uses `KEYSTORE_BASE64` secret for Stable; falls back to generated debug key for Dev/PRs.
+- **Dependencies:** Added `security-crypto`, `datastore`, `play-integrity`, `chucker` (debug).
+- **Files Created:**
+    - `SecurityManager.kt`, `SecurityModule.kt` (Encryption/Integrity).
+    - `SettingsScreen.kt`, `SettingsViewModel.kt`, `SettingsRepository.kt` (Settings & DataStore).
+    - `SplashScreen.kt`, `SplashViewModel.kt` (Auth check).
+    - `Theme.kt` (Dynamic colors).
+    - `ic_settings.xml` (Drawable).
 
-## 3. Current Implementation (Mock Phase)
-Since backend access is currently unavailable, the app uses a **Mock Repository** (`MockAdRepository`) to simulate server logic locally.
-- **Ad Limit:** 50 ads per day.
-- **Regeneration:** Slots regenerate 24 hours after being used.
-- **Storage:** Uses SharedPreferences (encrypted in future) to store credits, timestamps, and login session.
-- **Versioning:**
-  - **Stable:** Tags `vX.Y.Z` -> Version `X.Y.Z`
-  - **Dev:** `X.Y.Z-beta-PR{number}.{commit_count}`
+### 2.2 Pending Fixes (Blocking Build)
+The local build `assembleDevRelease` is failing with compilation errors:
+1.  **MainActivity.kt**:
+    - Unresolved `HexiumNodesTheme` (Check `Theme.kt` package/imports).
+    - Unresolved `HomeScreen` parameters (Signature mismatch).
+2.  **LoginScreen.kt**:
+    - Unresolved `R.drawable.ic_settings` (Resource ID not found).
+3.  **HomeScreen.kt**:
+    - Need to verify signature to match `MainActivity` usage.
 
-## 4. Future Roadmap (Post-Approval)
-### Phase 2: Server Integration
-1.  **Backend API:** Replace `MockAdRepository` with `NetworkAdRepository` implementing `AdRepository` interface.
-2.  **Authentication:** Implement real Login/Register with JWT tokens.
-3.  **Security:**
-    -   Move ad limit logic to server.
-    -   Implement "App Attest" or "Play Integrity API" to prevent modified APKs.
-    -   Encrypt sensitive data in `DataStore`.
+## 3. Next Steps (For Next Session)
+1.  **Fix Compilation Errors**:
+    - **Check `Theme.kt`**: Verify package declaration `package com.hexium.nodes.ui.theme` and import it in `MainActivity`.
+    - **Check `HomeScreen.kt`**: Read file to confirm constructor parameters. Update `MainActivity` call site or `HomeScreen` definition.
+    - **Check Resources**: Ensure `ic_settings.xml` is valid. Run `./gradlew clean` to regenerate `R` class if needed.
+2.  **Verify Build**: Run `./gradlew assembleDevRelease`.
+3.  **Submit Changes**: Push the `workflow-refactor` branch.
 
-### Phase 3: Monetization Optimization
-1.  **Ad Mediation:** Integrate multiple ad networks (AdMob, Unity Ads, etc.) via mediation.
-2.  **Analytics:** Add Firebase Analytics to track user behavior.
-
-## 5. Maintenance Guide
+## 4. Maintenance Guide
 ### Building Locally
 1.  **Debug:** `./gradlew assembleDevDebug`
-2.  **Release:** `./gradlew assembleStableRelease` (Requires `keystore.properties`)
+2.  **Release:** `./gradlew assembleDevRelease` (Uses debug keystore fallback in dev flavor).
 
-### GitHub Actions
-- **Secrets Required:**
-  - `KEYSTORE_BASE64`: Base64 encoded `.jks` file.
-  - `STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
-- **Triggers:**
-  - Push to `v*` tag: Builds Stable Release.
-  - PR to `dev`: Builds Dev Release.
+### Keystore Generation (For User)
+- Run in Termux to generate keys for GitHub Secrets:
+  ```bash
+  mkdir -p ~/storage/shared/HexiumNodes/Signature
+  keytool -genkey -v -keystore ~/storage/shared/HexiumNodes/Signature/hexium_release.jks \
+    -keyalg RSA -keysize 2048 -validity 10000 \
+    -alias hexium_key \
+    -dname "CN=Sin Exe, OU=App, O=Hexium Nodes, L=Palakkad, S=Kerala, C=IN" \
+    -storepass "YOUR_PASSWORD" -keypass "YOUR_PASSWORD"
+  base64 -w 0 ~/storage/shared/HexiumNodes/Signature/hexium_release.jks > ~/storage/shared/HexiumNodes/Signature/keystore_base64.txt
+  ```
+- Upload `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` to GitHub Secrets.
 
-### generating Keystore (Termux/Linux)
-Run this command to generate a keystore and get the base64 string for GitHub Secrets:
-```bash
-keytool -genkey -v -keystore keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias hexium_key
-base64 -w 0 keystore.jks > keystore_base64.txt
-```
-Copy content of `keystore_base64.txt` to `KEYSTORE_BASE64` secret.
+## 5. Future Roadmap
+- **Server Integration**: Switch from Mock to Real API (Auth, Ad Limits).
+- **Play Integrity**: Implement server-side verification of client tokens.
+- **Optimization**: Verify R8 shrinking efficiency.

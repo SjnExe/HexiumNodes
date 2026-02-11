@@ -15,6 +15,10 @@ import androidx.navigation.compose.rememberNavController
 import com.hexium.nodes.ui.MainViewModel
 import com.hexium.nodes.ui.home.HomeScreen
 import com.hexium.nodes.ui.login.LoginScreen
+import com.hexium.nodes.ui.splash.SplashScreen
+import com.hexium.nodes.ui.settings.SettingsScreen
+import com.hexium.nodes.ui.theme.HexiumNodesTheme
+import com.hexium.nodes.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -22,30 +26,54 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MaterialTheme {
+            val settingsViewModel: SettingsViewModel = hiltViewModel()
+            val settingsState by settingsViewModel.uiState.collectAsState()
+
+            HexiumNodesTheme(
+                darkTheme = settingsState.isDarkTheme,
+                dynamicColor = settingsState.useDynamicColors
+            ) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
-                    val viewModel: MainViewModel = hiltViewModel()
-                    val isLoggedIn by viewModel.isLoggedIn.collectAsState()
 
-                    LaunchedEffect(isLoggedIn) {
-                        if (isLoggedIn) {
-                            navController.navigate("home") {
-                                popUpTo("login") { inclusive = true }
-                            }
-                        } else {
-                            navController.navigate("login") {
-                                popUpTo("home") { inclusive = true }
-                            }
+                    NavHost(navController = navController, startDestination = "splash") {
+                        composable("splash") {
+                            SplashScreen(
+                                onNavigateToLogin = {
+                                    navController.navigate("login") {
+                                        popUpTo("splash") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToHome = {
+                                    navController.navigate("home") {
+                                        popUpTo("splash") { inclusive = true }
+                                    }
+                                }
+                            )
                         }
-                    }
-
-                    NavHost(navController = navController, startDestination = "login") {
                         composable("login") {
-                            LoginScreen(viewModel = viewModel)
+                            LoginScreen(
+                                onLoginSuccess = {
+                                    navController.navigate("home") {
+                                        popUpTo("login") { inclusive = true }
+                                    }
+                                },
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                }
+                            )
                         }
                         composable("home") {
-                            HomeScreen(viewModel = viewModel)
+                            HomeScreen(
+                                // Pass MainViewModel if needed for home
+                            )
+                        }
+                        composable("settings") {
+                            SettingsScreen(
+                                onNavigateBack = {
+                                    navController.popBackStack()
+                                }
+                            )
                         }
                     }
                 }

@@ -143,6 +143,15 @@ dependencies {
     // Ads
     implementation(libs.play.services.ads)
 
+    // Security & Persistence
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.google.android.play:integrity:1.3.0")
+
+    // Debugging (Dev only)
+    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
+    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+
     // Testing
     testImplementation(libs.junit)
     testImplementation(libs.mockito.core)

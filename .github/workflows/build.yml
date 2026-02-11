@@ -154,9 +154,17 @@ jobs:
           VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
         run: |
           set -o pipefail
+          # Build both Release and Debug APKs for Dev
           ./gradlew assembleDevRelease assembleDevDebug \
             -PversionCode=$VERSION_CODE \
             -PversionName="$VERSION_NAME" | tee build_dev.log
+
+          # Rename artifacts to generic names
+          mv app/build/outputs/apk/dev/release/app-dev-release.apk app/build/outputs/apk/dev/release/app-dev-release.apk 2>/dev/null || true
+          # Actually Gradle output name includes version usually if configured,
+          # but we want to rename WHATEVER was produced to generic names for upload.
+          find app/build/outputs/apk/dev/release -name "*.apk" -exec mv {} app/build/outputs/apk/dev/release/app-dev-release.apk \;
+          find app/build/outputs/apk/dev/debug -name "*.apk" -exec mv {} app/build/outputs/apk/dev/debug/app-dev-debug.apk \;
 
       - name: Build Stable Flavor
         if: needs.setup.outputs.IS_STABLE == 'true'
@@ -199,8 +207,8 @@ jobs:
         with:
           name: app-dev-${{ needs.setup.outputs.VERSION_NAME }}
           path: |
-            app/build/outputs/apk/dev/release/*.apk
-            app/build/outputs/apk/dev/debug/*.apk
+            app/build/outputs/apk/dev/release/app-dev-release.apk
+            app/build/outputs/apk/dev/debug/app-dev-debug.apk
 
       - name: Upload Bundle & APK (Stable)
         if: needs.setup.outputs.IS_STABLE == 'true'
@@ -266,6 +274,10 @@ jobs:
         with:
           tag_name: dev
           name: Development Build ${{ needs.setup.outputs.VERSION_NAME }}
+          body: |
+            Development build triggered by ${{ github.event_name }}.
+            Version: ${{ needs.setup.outputs.VERSION_NAME }}
+            Commit: ${{ github.sha }}
           files: |
             artifacts/dev/*.apk
           draft: false
