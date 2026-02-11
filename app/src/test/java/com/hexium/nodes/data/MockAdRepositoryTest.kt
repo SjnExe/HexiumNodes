@@ -8,41 +8,52 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
+import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.ArgumentMatchers.anyLong
 import org.mockito.ArgumentMatchers.anySet
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
-import org.mockito.Mock
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
-import org.mockito.MockitoAnnotations
 
 class MockAdRepositoryTest {
 
-    @Mock
-    lateinit var context: Context
-
-    @Mock
-    lateinit var sharedPreferences: SharedPreferences
-
-    @Mock
-    lateinit var editor: SharedPreferences.Editor
-
+    private lateinit var context: Context
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var editor: SharedPreferences.Editor
     private lateinit var repository: MockAdRepository
 
     @Before
     fun setup() {
-        MockitoAnnotations.openMocks(this)
+        context = mock(Context::class.java)
+        sharedPreferences = mock(SharedPreferences::class.java)
+        editor = mock(SharedPreferences.Editor::class.java)
 
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE)))
+        `when`(context.getSharedPreferences(anyString(), anyInt()))
             .thenReturn(sharedPreferences)
 
         `when`(sharedPreferences.edit()).thenReturn(editor)
         `when`(editor.putStringSet(anyString(), anySet())).thenReturn(editor)
         `when`(editor.putFloat(anyString(), anyFloat())).thenReturn(editor)
-        `when`(editor.putBoolean(anyString(), org.mockito.ArgumentMatchers.anyBoolean())).thenReturn(editor)
+        `when`(editor.putBoolean(anyString(), anyBoolean())).thenReturn(editor)
         `when`(editor.putString(anyString(), anyString())).thenReturn(editor)
         `when`(editor.remove(anyString())).thenReturn(editor)
+        `when`(editor.apply()).thenAnswer { }
+
+        // Mock default values for getStringSet
+        `when`(sharedPreferences.getStringSet(anyString(), anySet())).thenAnswer { invocation ->
+            invocation.arguments[1]
+        }
+         // Mock default values for getFloat
+        `when`(sharedPreferences.getFloat(anyString(), anyFloat())).thenAnswer { invocation ->
+            invocation.arguments[1]
+        }
+         // Mock default values for getBoolean
+        `when`(sharedPreferences.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation ->
+            invocation.arguments[1]
+        }
 
         repository = MockAdRepository(context)
     }
@@ -50,8 +61,8 @@ class MockAdRepositoryTest {
     @Test
     fun `watchAd increases credits and history`() = runBlocking {
         // Given
-        `when`(sharedPreferences.getFloat("credits", 0.00f)).thenReturn(10.0f)
-        `when`(sharedPreferences.getStringSet("ad_history", emptySet())).thenReturn(emptySet())
+        `when`(sharedPreferences.getFloat(eq("credits"), anyFloat())).thenReturn(10.0f)
+        `when`(sharedPreferences.getStringSet(eq("ad_history"), anySet())).thenReturn(emptySet())
 
         // When
         val result = repository.watchAd()
@@ -63,7 +74,7 @@ class MockAdRepositoryTest {
     @Test
     fun `getAvailableAds returns max when empty history`() = runBlocking {
         // Given
-        `when`(sharedPreferences.getStringSet("ad_history", emptySet())).thenReturn(emptySet())
+        `when`(sharedPreferences.getStringSet(eq("ad_history"), anySet())).thenReturn(emptySet())
 
         // When
         val available = repository.getAvailableAds()
