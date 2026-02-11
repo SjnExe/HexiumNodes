@@ -3,7 +3,6 @@ import java.io.FileInputStream
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.compose.compiler)
@@ -11,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.hexium.nodes"
-    compileSdk = 35
+    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -47,7 +46,7 @@ android {
     defaultConfig {
         applicationId = "com.hexium.nodes"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
 
         val versionCodeParam = project.findProperty("versionCode") as? String
         val versionNameParam = project.findProperty("versionName") as? String
@@ -89,12 +88,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-
-    kotlinOptions {
-        jvmTarget = "21"
+        sourceCompatibility = JavaVersion.VERSION_25
+        targetCompatibility = JavaVersion.VERSION_25
     }
 
     buildFeatures {
@@ -144,9 +139,9 @@ dependencies {
     implementation(libs.play.services.ads)
 
     // Security & Persistence
-    implementation("androidx.security:security-crypto:1.1.0-alpha06")
-    implementation("androidx.datastore:datastore-preferences:1.0.0")
-    implementation("com.google.android.play:integrity:1.3.0")
+    implementation(libs.androidx.security.crypto)
+    implementation(libs.androidx.datastore.preferences)
+    implementation(libs.play.integrity)
 
     // Debugging (Dev only)
     debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
