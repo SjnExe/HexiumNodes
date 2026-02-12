@@ -1,0 +1,33 @@
+{
+    "meta": {
+        "status": "success",
+        "version": "1.0.0"
+    },
+    "data": {
+        "user": {
+            "id": "123456",
+            "username": "mock_user",
+            "email": "user@example.com",
+            "credits": 50.75,
+            "created_at": "2024-01-01T00:00:00Z"
+        },
+        "ads": {
+            "daily_limit": 25,
+            "available": 20,
+            "reward_per_ad": 1.25,
+            "cooldown_seconds": 60
+        },
+        "history": [
+            {
+                "id": "ad_001",
+                "timestamp": 1709251200000,
+                "reward": 1.25
+            },
+            {
+                "id": "ad_002",
+                "timestamp": 1709164800000,
+                "reward": 1.00
+            }
+        ]
+    }
+}

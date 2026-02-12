@@ -10,6 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.hexium.nodes.BuildConfig
@@ -24,6 +25,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
+    onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -48,6 +50,31 @@ fun SettingsScreen(
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
 
+            // User Profile Section (if logged in)
+            if (uiState.isLoggedIn) {
+                ListItem(
+                    headlineContent = { Text(uiState.username ?: "User", fontWeight = FontWeight.Bold) },
+                    supportingContent = { Text(uiState.email ?: "No Email") },
+                    leadingContent = {
+                        Surface(
+                            shape = androidx.compose.foundation.shape.CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Text(
+                                    text = (uiState.username?.firstOrNull() ?: '?').toString().uppercase(),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            }
+                        }
+                    }
+                )
+                HorizontalDivider()
+            }
+
+            // Theme Selection
             Text(
                 text = "Theme",
                 style = MaterialTheme.typography.titleMedium,
@@ -55,34 +82,33 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.primary
             )
 
+            // Segmented Button-like UI for Theme
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(48.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    RadioButton(
-                        selected = uiState.themeMode == AppTheme.SYSTEM,
-                        onClick = { viewModel.setThemeMode(AppTheme.SYSTEM) }
-                    )
-                    Text("System")
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    RadioButton(
-                        selected = uiState.themeMode == AppTheme.LIGHT,
-                        onClick = { viewModel.setThemeMode(AppTheme.LIGHT) }
-                    )
-                    Text("Light")
-                }
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    RadioButton(
-                        selected = uiState.themeMode == AppTheme.DARK,
-                        onClick = { viewModel.setThemeMode(AppTheme.DARK) }
-                    )
-                    Text("Dark")
-                }
+                ThemeOption(
+                    text = "System",
+                    selected = uiState.themeMode == AppTheme.SYSTEM,
+                    onClick = { viewModel.setThemeMode(AppTheme.SYSTEM) },
+                    modifier = Modifier.weight(1f)
+                )
+                ThemeOption(
+                    text = "Light",
+                    selected = uiState.themeMode == AppTheme.LIGHT,
+                    onClick = { viewModel.setThemeMode(AppTheme.LIGHT) },
+                    modifier = Modifier.weight(1f)
+                )
+                ThemeOption(
+                    text = "Dark",
+                    selected = uiState.themeMode == AppTheme.DARK,
+                    onClick = { viewModel.setThemeMode(AppTheme.DARK) },
+                    modifier = Modifier.weight(1f)
+                )
             }
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
                 ListItem(
@@ -96,12 +122,62 @@ fun SettingsScreen(
                 )
             }
 
-            if (BuildConfig.FLAVOR == "dev") {
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+
+            // Logout Button (Only if logged in)
+            if (uiState.isLoggedIn) {
+                ListItem(
+                    headlineContent = { Text("Logout", color = MaterialTheme.colorScheme.error) },
+                    modifier = Modifier.clickable {
+                        viewModel.logout()
+                        onLogout()
+                    }
+                )
                 HorizontalDivider()
+            }
+
+            if (BuildConfig.FLAVOR == "dev") {
                 ListItem(headlineContent = { Text("Developer Options", color = MaterialTheme.colorScheme.primary) })
 
+                // Dev Configs
+                var adLimit by remember { mutableStateOf(uiState.devAdLimit.toString()) }
+                var adRate by remember { mutableStateOf(uiState.devAdRate.toString()) }
+
                 ListItem(
-                    headlineContent = { Text("Open Network Inspector (Chucker)") },
+                    headlineContent = { Text("Ad Limit") },
+                    trailingContent = {
+                        OutlinedTextField(
+                            value = adLimit,
+                            onValueChange = {
+                                if (it.all { char -> char.isDigit() }) {
+                                    adLimit = it
+                                    it.toIntOrNull()?.let { limit -> viewModel.updateDevAdLimit(limit) }
+                                }
+                            },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                    }
+                )
+
+                ListItem(
+                    headlineContent = { Text("Ad Rate") },
+                    trailingContent = {
+                         OutlinedTextField(
+                            value = adRate,
+                            onValueChange = {
+                                adRate = it
+                                it.toFloatOrNull()?.let { rate -> viewModel.updateDevAdRate(rate) }
+                            },
+                            modifier = Modifier.width(80.dp),
+                            singleLine = true
+                        )
+                    }
+                )
+
+
+                ListItem(
+                    headlineContent = { Text("Open Network Inspector") },
                     modifier = Modifier.clickable {
                         try {
                             val chuckerClass = Class.forName("com.chuckerteam.chucker.api.Chucker")
@@ -154,18 +230,30 @@ fun SettingsScreen(
                         Text("Save Logs")
                     }
                 }
-
-                var serverUrl by remember { mutableStateOf(uiState.serverUrl) }
-                OutlinedTextField(
-                    value = serverUrl,
-                    onValueChange = {
-                        serverUrl = it
-                        viewModel.updateServerUrl(it)
-                    },
-                    label = { Text("Server URL") },
-                    modifier = Modifier.fillMaxWidth().padding(16.dp)
-                )
             }
+        }
+    }
+}
+
+@Composable
+fun ThemeOption(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.small,
+        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
+        modifier = modifier.fillMaxHeight()
+    ) {
+        Box(contentAlignment = Alignment.Center) {
+            Text(
+                text = text,
+                style = MaterialTheme.typography.labelLarge,
+                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+            )
         }
     }
 }

@@ -31,7 +31,7 @@ class LoginViewModel @Inject constructor(
             if (success) {
                 _uiState.value = LoginUiState.Success
             } else {
-                _uiState.value = LoginUiState.Error("Invalid credentials")
+                _uiState.value = LoginUiState.Error("Username/Email or Password is Incorrect")
             }
         }
     }

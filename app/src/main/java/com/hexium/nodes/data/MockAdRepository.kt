@@ -1,41 +1,43 @@
 package com.hexium.nodes.data
 
 import android.content.SharedPreferences
+import com.hexium.nodes.data.preferences.SettingsRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class MockAdRepository @Inject constructor(
-    private val prefs: SharedPreferences
+    private val prefs: SharedPreferences,
+    private val settingsRepository: SettingsRepository
 ) : AdRepository {
 
-    private val MAX_ADS = 50
     private val REGEN_TIME_MS = 24 * 60 * 60 * 1000L // 24 hours
 
     override suspend fun getAvailableAds(): Int {
         return withContext(Dispatchers.IO) {
+            val maxAds = getMaxAds()
             cleanUpExpiredAds()
             val history = getHistoryInternal()
-            return@withContext MAX_ADS - history.size
+            return@withContext maxAds - history.size
         }
     }
 
-    override suspend fun getMaxAds(): Int {
-        return MAX_ADS
+    override suspend fun getMaxAds(): Int = withContext(Dispatchers.IO) {
+        return@withContext settingsRepository.settingsFlow.first().devAdLimit
     }
 
     override suspend fun getCredits(): Float = withContext(Dispatchers.IO) {
-        // Retrieve stored credits (as string to preserve precision, or long scaled by 100)
-        // Using float for now as requested, formatted to 2 decimal places in UI
         return@withContext prefs.getFloat("credits", 0.00f)
     }
 
     override suspend fun watchAd(): Boolean = withContext(Dispatchers.IO) {
+        val maxAds = getMaxAds()
         cleanUpExpiredAds()
         val history = getHistoryInternal().toMutableSet()
-        if (history.size >= MAX_ADS) {
+        if (history.size >= maxAds) {
             return@withContext false
         }
 
@@ -46,7 +48,7 @@ class MockAdRepository @Inject constructor(
 
         // Increment credits
         val currentCredits = prefs.getFloat("credits", 0.00f)
-        val reward = 1.00f // Placeholder reward
+        val reward = settingsRepository.settingsFlow.first().devAdRate
         prefs.edit().putFloat("credits", currentCredits + reward).apply()
 
         return@withContext true
@@ -63,10 +65,11 @@ class MockAdRepository @Inject constructor(
 
     override suspend fun login(username: String, password: String): Boolean = withContext(Dispatchers.IO) {
         // Mock validation
-        if (username == "admin" && password == "1234") {
+        if ((username == "admin" || username == "admin@email.com") && password == "1234") {
             prefs.edit()
                 .putBoolean("is_logged_in", true)
-                .putString("username", username)
+                .putString("username", "admin")
+                .putString("email", "admin@email.com")
                 .apply()
             return@withContext true
         }
@@ -77,11 +80,16 @@ class MockAdRepository @Inject constructor(
         prefs.edit()
             .putBoolean("is_logged_in", false)
             .remove("username")
+            .remove("email")
             .apply()
     }
 
     override suspend fun getUsername(): String? = withContext(Dispatchers.IO) {
         return@withContext prefs.getString("username", null)
+    }
+
+    override suspend fun getEmail(): String? = withContext(Dispatchers.IO) {
+        return@withContext prefs.getString("email", null)
     }
 
     private fun getHistoryInternal(): Set<String> {

@@ -73,13 +73,21 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             val mainViewModel: MainViewModel = hiltViewModel()
                             HomeScreen(
-                                viewModel = mainViewModel
+                                viewModel = mainViewModel,
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                }
                             )
                         }
                         composable("settings") {
                             SettingsScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
+                                },
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
                                 }
                             )
                         }

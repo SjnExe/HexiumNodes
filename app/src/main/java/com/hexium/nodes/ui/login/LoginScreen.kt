@@ -1,6 +1,11 @@
 package com.hexium.nodes.ui.login
 
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -8,6 +13,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
@@ -27,6 +34,7 @@ fun LoginScreen(
     var passwordVisible by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
 
     LaunchedEffect(uiState) {
         if (uiState is LoginUiState.Success) {
@@ -64,8 +72,12 @@ fun LoginScreen(
             OutlinedTextField(
                 value = username,
                 onValueChange = { username = it },
-                label = { Text("Username") },
+                label = { Text("Username or Email") },
                 singleLine = true,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -79,16 +91,25 @@ fun LoginScreen(
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     val image = if (passwordVisible)
-                        painterResource(id = android.R.drawable.ic_menu_view) // Using standard Android icons if available, otherwise fallback
+                        painterResource(id = android.R.drawable.ic_menu_view)
                     else
                         painterResource(id = android.R.drawable.ic_secure)
 
-                    // For now, let's just use text toggle or simple logic if icons aren't reliable
-                    // But actually, material icons are better.
-                    // Since I don't want to import material-icons-extended, I'll use a simple IconButton with text or generic icon.
-                    // I'll skip the icon for now to keep it simple and dependency-free, or just use a checkbox?
-                    // Let's just use no icon for simplicity, or add `ic_visibility` later if needed.
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                         Icon(painter = image, contentDescription = if (passwordVisible) "Hide password" else "Show password")
+                    }
                 },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done,
+                    autoCorrect = false
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                        viewModel.login(username, password)
+                    }
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
 
@@ -119,6 +140,31 @@ fun LoginScreen(
                     Text("Login")
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Forgot Password Link
+            Text(
+                text = "Forgot Password?",
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.clickable {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://client.hexiumnodes.com/index.php?rp=/password/reset"))
+                    context.startActivity(intent)
+                }
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Create Account Link
+            Text(
+                text = "Create Account",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.clickable {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://client.hexiumnodes.com/register.php"))
+                    context.startActivity(intent)
+                }
+            )
         }
     }
 }
