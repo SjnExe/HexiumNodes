@@ -55,3 +55,20 @@ sudo apt clean
 ./gradlew --version
 java -version
 ```
+
+## Useful Commands
+
+### Building
+*   **Build Debug APK:** `./gradlew assembleDevDebug`
+*   **Build Release APK:** `./gradlew assembleDevRelease` (Requires keystore or fallback)
+*   **Bundle (Stable):** `./gradlew bundleStableRelease`
+
+### Quality & Testing
+*   **Run Lint:** `./gradlew lintDevDebug`
+*   **Run Unit Tests:** `./gradlew testDevDebug`
+*   **Format Code (Spotless):** `./gradlew spotlessApply` (Run this before committing!)
+*   **Check Format:** `./gradlew spotlessCheck`
+
+### Modularization
+*   **Sync Project:** `./gradlew --refresh-dependencies`
+*   **Clean Build:** `./gradlew clean build`

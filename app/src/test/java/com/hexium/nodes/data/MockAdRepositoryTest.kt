@@ -40,7 +40,7 @@ class MockAdRepositoryTest {
             serverUrl = "http://test",
             devAdLimit = 50,
             devAdRate = 1.0f,
-            devAdExpiry = 24
+            devAdExpiry = 24,
         )
         whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
 

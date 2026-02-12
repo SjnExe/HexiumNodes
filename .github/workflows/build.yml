@@ -85,13 +85,13 @@ jobs:
             echo "Using generated debug.keystore for signing."
           fi
 
-      - name: Run Lint (Fail Fast)
+      - name: Run Lint and Tests
         env:
           VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
           VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
         run: |
           set -o pipefail
-          ./gradlew lint | tee lint.log
+          ./gradlew lintDevDebug testDevDebug 2>&1 | tee lint_test.log
 
       - name: Build App
         id: build
@@ -150,7 +150,7 @@ jobs:
             fi
           }
 
-          extract_errors "lint.log"
+          extract_errors "lint_test.log"
           extract_errors "build_stable.log"
           extract_errors "build_dev.log"
 
@@ -162,6 +162,16 @@ jobs:
         with:
           name: build-summary
           path: build_summary.txt
+
+      - name: Upload Lint & Test Results
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: lint-test-results
+          path: |
+            **/build/reports/lint-results-*.html
+            **/build/reports/tests/**/index.html
+            lint_test.log
 
       - name: Upload APKs (Dev)
         if: steps.version.outputs.IS_STABLE == 'false'
