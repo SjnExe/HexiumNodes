@@ -7,12 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.BuildConfig
 import com.hexium.nodes.data.preferences.AppTheme
 import com.hexium.nodes.ui.viewmodel.SettingsViewModel
@@ -29,7 +28,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboard.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -202,7 +201,8 @@ fun SettingsScreen(
                             scope.launch(Dispatchers.IO) {
                                 val logs = LogUtils.captureLogs()
                                 withContext(Dispatchers.Main) {
-                                    clipboardManager.setText(AnnotatedString(logs))
+                                    val clipData = android.content.ClipData.newPlainText("Hexium Logs", logs)
+                                    clipboardManager.setClipEntry(ClipEntry(clipData))
                                     Toast.makeText(context, "Logs copied to clipboard", Toast.LENGTH_SHORT).show()
                                 }
                             }

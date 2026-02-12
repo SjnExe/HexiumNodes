@@ -18,7 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.R
 import com.hexium.nodes.ui.viewmodel.LoginUiState
 import com.hexium.nodes.ui.viewmodel.LoginViewModel
@@ -76,7 +76,8 @@ fun LoginScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Next,
+                    autoCorrectEnabled = false
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -102,7 +103,7 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done,
-                    autoCorrect = false
+                    autoCorrectEnabled = false
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
