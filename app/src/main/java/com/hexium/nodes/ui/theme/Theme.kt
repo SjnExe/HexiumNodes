@@ -46,8 +46,10 @@ fun HexiumNodesTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Use setter to avoid Kotlin property access deprecation warning
-            window.setStatusBarColor(colorScheme.primary.toArgb())
+            // Use property access syntax which is standard in Kotlin
+            // The setter method itself (setStatusBarColor) is what triggers the deprecation in some contexts
+            // but for Window.statusBarColor, property syntax is preferred.
+            window.statusBarColor = colorScheme.primary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
     }
