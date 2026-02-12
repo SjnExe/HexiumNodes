@@ -8,117 +8,59 @@ on:
     branches:
       - dev
   workflow_dispatch:
-    inputs:
-      flavor:
-        description: 'Flavor to build'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-        - dev
-        - stable
+    # Manual trigger for creating dev builds on demand
 
 jobs:
-  setup:
+  build_and_release:
     runs-on: ubuntu-latest
-    outputs:
-      VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
-      VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
-      IS_STABLE: ${{ steps.version.outputs.IS_STABLE }}
+    permissions:
+      contents: write
+      packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Calculate Version
         id: version
         run: |
-          # Fetch tags
+          # Fetch tags for versioning
           git fetch --tags --force
 
+          # Get latest stable tag (e.g. v1.4.6 -> 1.4.6) or default to 0.0.0
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           VERSION_BASE=${LATEST_TAG#v}
           COMMIT_COUNT=$(git rev-list --count HEAD)
 
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            # Stable Release from Tag
+            # Stable Release from Tag (e.g. 1.4.6)
             VERSION_NAME=${GITHUB_REF#refs/tags/v}
             VERSION_CODE=$COMMIT_COUNT
             IS_STABLE=true
             echo "Building Stable Release: $VERSION_NAME ($VERSION_CODE)"
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # PR Build
+            # PR Dev Build (e.g. 1.4.6-dev-PR9.34)
             PR_NUMBER=${{ github.event.pull_request.number }}
             PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
-            VERSION_NAME="${VERSION_BASE}-beta-PR${PR_NUMBER}.${PR_COMMITS}"
+            VERSION_NAME="${VERSION_BASE}-dev-PR${PR_NUMBER}.${PR_COMMITS}"
             VERSION_CODE=$COMMIT_COUNT
             IS_STABLE=false
             echo "Building PR Dev Build: $VERSION_NAME ($VERSION_CODE)"
           else
-            # Manual or Push to Dev
+            # Manual or Push to Dev (e.g. 1.4.6-dev-run42)
             RUN_NUMBER=${{ github.run_number }}
-            VERSION_NAME="${VERSION_BASE}-beta-run${RUN_NUMBER}"
+            VERSION_NAME="${VERSION_BASE}-dev-run${RUN_NUMBER}"
             VERSION_CODE=$COMMIT_COUNT
             IS_STABLE=false
-            if [[ "${{ inputs.flavor }}" == "stable" ]]; then
-               IS_STABLE=true
-               echo "Building Manual Stable Build: $VERSION_NAME"
-            else
-               echo "Building Manual Dev Build: $VERSION_NAME"
-            fi
+            echo "Building Manual Dev Build: $VERSION_NAME"
           fi
 
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "IS_STABLE=$IS_STABLE" >> $GITHUB_OUTPUT
 
-  lint:
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - uses: actions/checkout@v4
-
       - name: Set up JDK 25
-        uses: actions/setup-java@v4
-        with:
-          java-version: '25'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
-      - name: Lint
-        env:
-          VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
-          VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
-        run: ./gradlew lint
-
-      - name: Unit Tests
-        env:
-          VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
-          VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
-        run: ./gradlew testDevDebugUnitTest
-
-      - name: Upload Test Reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: lint-test-reports
-          path: |
-            app/build/reports/lint-results-*.html
-            app/build/reports/tests/test*UnitTest/index.html
-
-  build:
-    runs-on: ubuntu-latest
-    needs: [setup, lint]
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up JDK 25
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
@@ -130,7 +72,7 @@ jobs:
       - name: Decode Keystore
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-          IS_STABLE: ${{ needs.setup.outputs.IS_STABLE }}
+          IS_STABLE: ${{ steps.version.outputs.IS_STABLE }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
@@ -144,141 +86,127 @@ jobs:
             echo "Using generated debug.keystore for signing."
           fi
 
-      - name: Build Dev Flavor
-        if: needs.setup.outputs.IS_STABLE == 'false'
+      - name: Run Lint (Fail Fast)
+        env:
+          VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
+          VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
+        run: ./gradlew lint | tee lint.log
+
+      - name: Build App
+        id: build
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
-          VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
+          VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
+          VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
+          IS_STABLE: ${{ steps.version.outputs.IS_STABLE }}
         run: |
           set -o pipefail
-          # Build both Release and Debug APKs for Dev
-          ./gradlew assembleDevRelease assembleDevDebug \
-            -PversionCode=$VERSION_CODE \
-            -PversionName="$VERSION_NAME" | tee build_dev.log
 
-          # Rename artifacts to generic names
-          mv app/build/outputs/apk/dev/release/app-dev-release.apk app/build/outputs/apk/dev/release/app-dev-release.apk 2>/dev/null || true
-          # Actually Gradle output name includes version usually if configured,
-          # but we want to rename WHATEVER was produced to generic names for upload.
-          find app/build/outputs/apk/dev/release -name "*.apk" -exec mv {} app/build/outputs/apk/dev/release/app-dev-release.apk \;
-          find app/build/outputs/apk/dev/debug -name "*.apk" -exec mv {} app/build/outputs/apk/dev/debug/app-dev-debug.apk \;
+          if [ "$IS_STABLE" == "true" ]; then
+            # Build Stable Release (AAB & APK)
+            ./gradlew bundleStableRelease assembleStableRelease \
+              -PversionCode=$VERSION_CODE \
+              -PversionName="$VERSION_NAME" 2>&1 | tee build_stable.log
+          else
+            # Build Dev Flavor (Release & Debug APKs)
+            # We build Release to test minification, and Debug for debugging features
+            ./gradlew assembleDevRelease assembleDevDebug \
+              -PversionCode=$VERSION_CODE \
+              -PversionName="$VERSION_NAME" 2>&1 | tee build_dev.log
 
-      - name: Build Stable Flavor
-        if: needs.setup.outputs.IS_STABLE == 'true'
-        env:
-          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-          VERSION_NAME: ${{ needs.setup.outputs.VERSION_NAME }}
-          VERSION_CODE: ${{ needs.setup.outputs.VERSION_CODE }}
-        run: |
-          set -o pipefail
-          ./gradlew bundleStableRelease assembleStableRelease \
-            -PversionCode=$VERSION_CODE \
-            -PversionName="$VERSION_NAME" | tee build_stable.log
+            # Rename artifacts to generic names for easier upload/release
+            # Ensure output directories exist first to avoid errors
+            mkdir -p app/build/outputs/apk/dev/release
+            mkdir -p app/build/outputs/apk/dev/debug
 
-      - name: Generate Short Logs
+            # Use find to locate and move, ignoring if file is already named correctly
+            find app/build/outputs/apk/dev/release -name "*.apk" ! -name "app-dev-release.apk" -exec mv {} app/build/outputs/apk/dev/release/app-dev-release.apk \;
+            find app/build/outputs/apk/dev/debug -name "*.apk" ! -name "app-dev-debug.apk" -exec mv {} app/build/outputs/apk/dev/debug/app-dev-debug.apk \;
+          fi
+
+      - name: Generate Summary Log
         if: always()
         run: |
-          for log in build_*.log; do
-            if [ -f "$log" ]; then
-              echo "--- HEAD ---" > "${log}.short.txt"
-              head -n 100 "$log" >> "${log}.short.txt"
-              echo "--- TAIL ---" >> "${log}.short.txt"
-              tail -n 100 "$log" >> "${log}.short.txt"
+          SUMMARY_FILE="build_summary.txt"
+          touch $SUMMARY_FILE
+          echo "=== BUILD SUMMARY for ${{ steps.version.outputs.VERSION_NAME }} ===" >> $SUMMARY_FILE
+          echo "Date: $(date)" >> $SUMMARY_FILE
+          echo "Ref: ${{ github.ref }}" >> $SUMMARY_FILE
+          echo "Commit: ${{ github.sha }}" >> $SUMMARY_FILE
+          echo "" >> $SUMMARY_FILE
+
+          # Function to grep errors with context
+          extract_errors() {
+            local log_file=$1
+            if [ -f "$log_file" ]; then
+              echo "--- ERROR ANALYSIS: $log_file ---" >> $SUMMARY_FILE
+              # Capture lines containing 'error', 'failed', 'exception' with context
+              # Exclude task execution lines unless they failed
+              grep -i -E "(error|failed|exception|fatal)" -C 5 "$log_file" >> $SUMMARY_FILE || echo "No explicit error keywords found." >> $SUMMARY_FILE
+              echo "" >> $SUMMARY_FILE
             fi
-          done
+          }
 
-      - name: Upload Build Logs
+          extract_errors "lint.log"
+          extract_errors "build_stable.log"
+          extract_errors "build_dev.log"
+
+          echo "=== END SUMMARY ===" >> $SUMMARY_FILE
+
+      - name: Upload Summary Log
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
-          name: build-logs
-          path: |
-            *.log
-            *.short.txt
+          name: build-summary
+          path: build_summary.txt
 
       - name: Upload APKs (Dev)
-        if: needs.setup.outputs.IS_STABLE == 'false'
-        uses: actions/upload-artifact@v4
+        if: steps.version.outputs.IS_STABLE == 'false'
+        uses: actions/upload-artifact@v6
         with:
-          name: app-dev-${{ needs.setup.outputs.VERSION_NAME }}
+          name: app-dev-${{ steps.version.outputs.VERSION_NAME }}
           path: |
             app/build/outputs/apk/dev/release/app-dev-release.apk
             app/build/outputs/apk/dev/debug/app-dev-debug.apk
 
       - name: Upload Bundle & APK (Stable)
-        if: needs.setup.outputs.IS_STABLE == 'true'
-        uses: actions/upload-artifact@v4
+        if: steps.version.outputs.IS_STABLE == 'true'
+        uses: actions/upload-artifact@v6
         with:
-          name: app-stable-${{ needs.setup.outputs.VERSION_NAME }}
+          name: app-stable-${{ steps.version.outputs.VERSION_NAME }}
           path: |
             app/build/outputs/bundle/stableRelease/*.aab
             app/build/outputs/apk/stable/release/*.apk
 
-  test_arm:
-    runs-on: ubuntu-latest
-    needs: build
-    if: needs.setup.outputs.IS_STABLE == 'false'
-    steps:
-      - name: Placeholder for ARM64 Tests
-        run: echo "Skipping ARM64 tests as no runner is configured yet."
-
-  release:
-    runs-on: ubuntu-latest
-    needs: [setup, build]
-    permissions:
-      contents: write
-    steps:
-      - name: Download Artifacts (Stable)
-        if: needs.setup.outputs.IS_STABLE == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: app-stable-${{ needs.setup.outputs.VERSION_NAME }}
-          path: artifacts/stable
-
-      - name: Create GitHub Release (Stable)
-        if: needs.setup.outputs.IS_STABLE == 'true'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ needs.setup.outputs.VERSION_NAME }}
-          name: Release ${{ needs.setup.outputs.VERSION_NAME }}
-          files: |
-            artifacts/stable/*.apk
-            artifacts/stable/*.aab
-          draft: false
-          prerelease: false
-
-      - name: Download Artifacts (Dev)
-        if: needs.setup.outputs.IS_STABLE == 'false' && github.event_name != 'pull_request'
-        uses: actions/download-artifact@v4
-        with:
-          name: app-dev-${{ needs.setup.outputs.VERSION_NAME }}
-          path: artifacts/dev
-
-      - name: Delete Old Dev Tag
-        if: needs.setup.outputs.IS_STABLE == 'false' && github.event_name != 'pull_request'
-        uses: dev-drprasad/delete-tag-and-release@v1.1
-        with:
-          tag_name: dev
-          delete_release: true
+      - name: Create/Update Dev Release
+        if: steps.version.outputs.IS_STABLE == 'false'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
+        run: |
+          # Delete existing 'dev' tag and release to keep it floating
+          gh release delete dev --cleanup-tag -y || true
 
-      - name: Create Dev Release
-        if: needs.setup.outputs.IS_STABLE == 'false' && github.event_name != 'pull_request'
-        uses: softprops/action-gh-release@v1
+          # Create new Dev Release
+          # Use "dev" as tag name, but title includes version
+          gh release create dev \
+            app/build/outputs/apk/dev/release/app-dev-release.apk \
+            app/build/outputs/apk/dev/debug/app-dev-debug.apk \
+            --title "Development Build $VERSION_NAME" \
+            --notes "Development build triggered by ${{ github.event_name }}. Version: $VERSION_NAME" \
+            --prerelease \
+            --target ${{ github.sha }}
+
+      - name: Create Stable Release
+        if: steps.version.outputs.IS_STABLE == 'true'
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: dev
-          name: Development Build ${{ needs.setup.outputs.VERSION_NAME }}
-          body: |
-            Development build triggered by ${{ github.event_name }}.
-            Version: ${{ needs.setup.outputs.VERSION_NAME }}
-            Commit: ${{ github.sha }}
+          tag_name: ${{ github.ref_name }} # Uses the pushed tag (e.g. v1.4.6)
+          name: Release ${{ steps.version.outputs.VERSION_NAME }}
           files: |
-            artifacts/dev/*.apk
+            app/build/outputs/bundle/stableRelease/*.aab
+            app/build/outputs/apk/stable/release/*.apk
           draft: false
-          prerelease: true
+          prerelease: false
