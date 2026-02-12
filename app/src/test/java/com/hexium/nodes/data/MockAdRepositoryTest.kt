@@ -39,7 +39,8 @@ class MockAdRepositoryTest {
             useDynamicColors = false,
             serverUrl = "http://test",
             devAdLimit = 50,
-            devAdRate = 1.0f
+            devAdRate = 1.0f,
+            devAdExpiry = 24
         )
         whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
 
