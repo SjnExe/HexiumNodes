@@ -1,48 +1,78 @@
-# Hexium Nodes
+# Hexium Nodes (Android)
 
-Ad-reward application built with modern Android development practices (Kotlin, Jetpack Compose, Clean Architecture).
+**Hexium Nodes** is an Android application designed to allow users to earn credits by engaging with ads.
 
-## Prerequisites
+## 📱 Features
+*   **Ad Rewards:** Watch ads to earn credits (Mock implementation for development).
+*   **Ad History:** View history of watched ads and their expiry.
+*   **Ad Limits:** Daily limits on ad consumption.
+*   **Developer Options:** Configure ad rates, limits, and expiry for testing.
+*   **Theming:** Support for Dark, Light, and System themes, including Material You (Dynamic Colors).
 
-- **JDK 21+**
-- **Android Studio Ladybug+** (or command line tools)
-- **Termux** (for mobile development)
+## 🛠 Tech Stack
+*   **Language:** Kotlin
+*   **UI:** Jetpack Compose (Material 3)
+*   **Architecture:** MVVM (Model-View-ViewModel), Clean Architecture
+*   **Dependency Injection:** Hilt
+*   **Persistence:** Room Database, DataStore
+*   **Networking:** Retrofit (Placeholder for future API)
+*   **Build System:** Gradle (Kotlin DSL), Version Catalogs
 
-## Setup
+## 📂 Modularization
+The project is modularized to ensure separation of concerns and faster build times:
+*   `:app` - Application entry point.
+*   `:feature:home` - Home screen, Ad watching logic.
+*   `:feature:auth` - Login and Splash screens.
+*   `:feature:settings` - Settings and Developer options.
+*   `:data` - Repositories, Data Sources, Networking.
+*   `:core:ui` - Shared UI components, Theme, Resources (`strings.xml`).
+*   `:core:model` - Shared data models.
+*   `:core:common` - Shared utilities (`LogUtils`).
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/hexium-nodes.git
-   cd hexium-nodes
-   ```
+## 🚀 Getting Started
 
-2. **Setup Local Signing (Optional):**
-   Create a `keystore.properties` file in the root directory:
-   ```properties
-   storeFile=my-upload-key.keystore
-   storePassword=your_password
-   keyAlias=your_alias
-   keyPassword=your_password
-   ```
+### Prerequisites
+*   JDK 21 (Required for AGP 9.0+)
+*   Android Studio (Latest Stable)
 
-3. **Build the App:**
-   ```bash
-   ./gradlew :app:assembleDevDebug
-   ```
+### Building the App
+*   **Debug Build:**
+    ```bash
+    ./gradlew assembleDevDebug
+    ```
+*   **Release Build:**
+    ```bash
+    ./gradlew assembleDevRelease
+    ```
+    *Note: Requires `keystore.properties` or environment variables (see [SECURITY.md](SECURITY.md)).*
 
-## Development
+### Testing & Quality
+*   **Run Unit Tests:**
+    ```bash
+    ./gradlew testDevDebug
+    ```
+*   **Run Lint:**
+    ```bash
+    ./gradlew lintDevDebug
+    ```
+*   **Format Code:**
+    ```bash
+    ./gradlew spotlessApply
+    ```
 
-- **Architecture:** Clean Architecture + MVVM.
-  - `data/`: Repositories and data sources.
-  - `domain/`: Business logic.
-  - `ui/`: ViewModels and Compose screens.
-- **Testing:** Unit tests run via `./gradlew test`.
+## 🌐 GitHub Pages Configuration (Testing)
+This repository includes a workflow to publish a static `config.json` to GitHub Pages for testing remote configuration.
+1.  Update `config/config.json`.
+2.  Go to **Actions** tab -> **Publish Config to GitHub Pages**.
+3.  Run workflow.
+4.  In the App -> Settings -> Developer Options, set Server URL to `https://<user>.github.io/HexiumNodes`.
 
-## Releases
+## 🤝 Contributing
+1.  Fork the repository.
+2.  Create a feature branch.
+3.  Commit your changes (Sign-off required).
+4.  Push to the branch.
+5.  Open a Pull Request.
 
-- **Stable:** Tag a commit with `vX.Y.Z` (e.g., `v1.0.0`) to trigger a stable release build.
-- **Dev:** Open a Pull Request to `dev` branch or dispatch manually.
-
-## Contact
-
-For questions or issues, please open an issue in the repository.
+## 📄 License
+[MIT License](LICENSE)

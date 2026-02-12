@@ -223,7 +223,7 @@ fun HistoryItem(timestamp: Long, expiryHours: Int) {
     }
 }
 
-fun formatCredits(credits: Float): String {
+fun formatCredits(credits: Double): String {
     val formatted = String.format(Locale.US, "%.2f", credits)
     return if (formatted.endsWith(".00")) {
         formatted.substring(0, formatted.length - 3)

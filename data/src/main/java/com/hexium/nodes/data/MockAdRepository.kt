@@ -14,6 +14,10 @@ class MockAdRepository @Inject constructor(
     private val settingsRepository: SettingsRepository,
 ) : AdRepository {
 
+    companion object {
+        private const val MAX_BALANCE = 1000000.0 // Max balance limit
+    }
+
     override suspend fun getAvailableAds(): Int {
         return withContext(Dispatchers.IO) {
             val maxAds = getMaxAds()
@@ -27,7 +31,7 @@ class MockAdRepository @Inject constructor(
         return@withContext settingsRepository.settingsFlow.first().devAdLimit
     }
 
-    override suspend fun getAdRewardRate(): Float = withContext(Dispatchers.IO) {
+    override suspend fun getAdRewardRate(): Double = withContext(Dispatchers.IO) {
         return@withContext settingsRepository.settingsFlow.first().devAdRate
     }
 
@@ -35,8 +39,9 @@ class MockAdRepository @Inject constructor(
         return@withContext settingsRepository.settingsFlow.first().devAdExpiry
     }
 
-    override suspend fun getCredits(): Float = withContext(Dispatchers.IO) {
-        return@withContext prefs.getFloat("credits", 0.00f)
+    override suspend fun getCredits(): Double = withContext(Dispatchers.IO) {
+        val creditsStr = prefs.getString("credits_double", "0.00") ?: "0.00"
+        return@withContext creditsStr.toDoubleOrNull() ?: 0.0
     }
 
     override suspend fun watchAd(): Boolean = withContext(Dispatchers.IO) {
@@ -47,15 +52,25 @@ class MockAdRepository @Inject constructor(
             return@withContext false
         }
 
+        // Check Max Balance
+        val currentCredits = getCredits()
+        if (currentCredits >= MAX_BALANCE) {
+            return@withContext false
+        }
+
+        val reward = getAdRewardRate()
+        if (reward <= 0) {
+            return@withContext false // Refuse negative or zero rewards
+        }
+
         // Add current timestamp
         val now = System.currentTimeMillis()
         history.add(now.toString())
         prefs.edit().putStringSet("ad_history", history).apply()
 
         // Increment credits
-        val currentCredits = prefs.getFloat("credits", 0.00f)
-        val reward = settingsRepository.settingsFlow.first().devAdRate
-        prefs.edit().putFloat("credits", currentCredits + reward).apply()
+        val newCredits = currentCredits + reward
+        prefs.edit().putString("credits_double", newCredits.toString()).apply()
 
         return@withContext true
     }

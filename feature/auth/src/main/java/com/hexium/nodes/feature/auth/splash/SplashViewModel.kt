@@ -30,7 +30,6 @@ class SplashViewModel @Inject constructor(
     private fun checkAuth() {
         viewModelScope.launch {
             // Simulate check auth
-            delay(1000)
             val isLoggedIn = repository.isLoggedIn()
             _authState.value = if (isLoggedIn) AuthState.LoggedIn else AuthState.LoggedOut
         }

@@ -15,8 +15,8 @@ class HomeViewModel @Inject constructor(
     private val repository: AdRepository,
 ) : ViewModel() {
 
-    private val _credits = MutableStateFlow(0.00f)
-    val credits: StateFlow<Float> = _credits.asStateFlow()
+    private val _credits = MutableStateFlow(0.00)
+    val credits: StateFlow<Double> = _credits.asStateFlow()
 
     private val _availableAds = MutableStateFlow(0)
     val availableAds: StateFlow<Int> = _availableAds.asStateFlow()
@@ -24,8 +24,8 @@ class HomeViewModel @Inject constructor(
     private val _maxAds = MutableStateFlow(50)
     val maxAds: StateFlow<Int> = _maxAds.asStateFlow()
 
-    private val _adRate = MutableStateFlow(1.0f)
-    val adRate: StateFlow<Float> = _adRate.asStateFlow()
+    private val _adRate = MutableStateFlow(1.0)
+    val adRate: StateFlow<Double> = _adRate.asStateFlow()
 
     private val _adExpiryHours = MutableStateFlow(24)
     val adExpiryHours: StateFlow<Int> = _adExpiryHours.asStateFlow()

@@ -1,0 +1,7 @@
+{
+  "devAdLimit": 50,
+  "devAdRate": 1.0,
+  "devAdExpiry": 24,
+  "maintenance": false,
+  "minVersion": 1
+}

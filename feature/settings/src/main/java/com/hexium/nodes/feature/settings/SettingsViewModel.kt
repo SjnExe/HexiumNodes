@@ -63,7 +63,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setDevAdLimit(limit) }
     }
 
-    fun updateDevAdRate(rate: Float) {
+    fun updateDevAdRate(rate: Double) {
         viewModelScope.launch { settingsRepository.setDevAdRate(rate) }
     }
 
@@ -87,6 +87,6 @@ data class SettingsUiState(
     val username: String? = null,
     val email: String? = null,
     val devAdLimit: Int = 50,
-    val devAdRate: Float = 1.0f,
+    val devAdRate: Double = 1.0,
     val devAdExpiry: Int = 24,
 )

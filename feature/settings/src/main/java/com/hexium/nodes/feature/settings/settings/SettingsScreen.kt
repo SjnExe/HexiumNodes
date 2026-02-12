@@ -5,6 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,7 +37,7 @@ fun SettingsScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    // Pre-fetch strings to avoid using context.getString inside callbacks (Lint requirement)
+    // Pre-fetch strings
     val logsCopiedMsg = stringResource(R.string.logs_copied)
     val logsSavedMsgTemplate = stringResource(R.string.logs_saved)
     val logsSaveFailedMsg = stringResource(R.string.logs_save_failed)
@@ -57,71 +58,86 @@ fun SettingsScreen(
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-            // User Profile Section (if logged in)
+            // User Profile Section (Redesigned)
             if (uiState.isLoggedIn) {
-                ListItem(
-                    headlineContent = { Text(uiState.username ?: stringResource(R.string.user), fontWeight = FontWeight.Bold) },
-                    supportingContent = { Text(uiState.email ?: stringResource(R.string.no_email)) },
-                    leadingContent = {
+                Card(
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
                         Surface(
                             shape = androidx.compose.foundation.shape.CircleShape,
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            modifier = Modifier.size(40.dp),
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(48.dp),
                         ) {
                             Box(contentAlignment = Alignment.Center) {
                                 Text(
                                     text = (uiState.username?.firstOrNull() ?: '?').toString().uppercase(),
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                 )
                             }
                         }
-                    },
-                )
-                HorizontalDivider()
-
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.logout), color = MaterialTheme.colorScheme.error) },
-                    modifier = Modifier.clickable {
-                        viewModel.logout()
-                        onLogout()
-                    },
-                )
-                HorizontalDivider()
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = uiState.username ?: stringResource(R.string.user),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                            )
+                            Text(
+                                text = uiState.email ?: stringResource(R.string.no_email),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        IconButton(onClick = {
+                            viewModel.logout()
+                            onLogout()
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = stringResource(R.string.logout),
+                                tint = MaterialTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
             }
 
-            // Theme Selection
+            // Theme Selection (Chips style)
             Text(
                 text = stringResource(R.string.theme),
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(16.dp, 16.dp, 16.dp, 8.dp),
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 color = MaterialTheme.colorScheme.primary,
             )
 
-            // Segmented Button-like UI for Theme
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-                    .height(48.dp),
+                    .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                ThemeOption(
-                    text = stringResource(R.string.theme_system),
+                FilterChip(
                     selected = uiState.themeMode == AppTheme.SYSTEM,
                     onClick = { viewModel.setThemeMode(AppTheme.SYSTEM) },
+                    label = { Text(stringResource(R.string.theme_system)) },
                     modifier = Modifier.weight(1f),
                 )
-                ThemeOption(
-                    text = stringResource(R.string.theme_light),
+                FilterChip(
                     selected = uiState.themeMode == AppTheme.LIGHT,
                     onClick = { viewModel.setThemeMode(AppTheme.LIGHT) },
+                    label = { Text(stringResource(R.string.theme_light)) },
                     modifier = Modifier.weight(1f),
                 )
-                ThemeOption(
-                    text = stringResource(R.string.theme_dark),
+                FilterChip(
                     selected = uiState.themeMode == AppTheme.DARK,
                     onClick = { viewModel.setThemeMode(AppTheme.DARK) },
+                    label = { Text(stringResource(R.string.theme_dark)) },
                     modifier = Modifier.weight(1f),
                 )
             }
@@ -148,14 +164,21 @@ fun SettingsScreen(
                 var adRate by remember { mutableStateOf(uiState.devAdRate.toString()) }
                 var adExpiry by remember { mutableStateOf(uiState.devAdExpiry.toString()) }
 
+                // Sync with UI State only if values differ significantly to prevent typing interference
                 LaunchedEffect(uiState.devAdLimit) {
-                    adLimit = uiState.devAdLimit.toString()
+                    if (adLimit.toIntOrNull() != uiState.devAdLimit) {
+                        adLimit = uiState.devAdLimit.toString()
+                    }
                 }
                 LaunchedEffect(uiState.devAdRate) {
-                    adRate = uiState.devAdRate.toString()
+                    if (adRate.toDoubleOrNull() != uiState.devAdRate) {
+                        adRate = uiState.devAdRate.toString()
+                    }
                 }
                 LaunchedEffect(uiState.devAdExpiry) {
-                    adExpiry = uiState.devAdExpiry.toString()
+                    if (adExpiry.toIntOrNull() != uiState.devAdExpiry) {
+                        adExpiry = uiState.devAdExpiry.toString()
+                    }
                 }
 
                 ListItem(
@@ -169,7 +192,7 @@ fun SettingsScreen(
                                     it.toIntOrNull()?.let { limit -> viewModel.updateDevAdLimit(limit) }
                                 }
                             },
-                            modifier = Modifier.width(80.dp),
+                            modifier = Modifier.width(100.dp),
                             singleLine = true,
                         )
                     },
@@ -182,9 +205,9 @@ fun SettingsScreen(
                             value = adRate,
                             onValueChange = {
                                 adRate = it
-                                it.toFloatOrNull()?.let { rate -> viewModel.updateDevAdRate(rate) }
+                                it.toDoubleOrNull()?.let { rate -> viewModel.updateDevAdRate(rate) }
                             },
-                            modifier = Modifier.width(80.dp),
+                            modifier = Modifier.width(100.dp),
                             singleLine = true,
                         )
                     },
@@ -201,7 +224,7 @@ fun SettingsScreen(
                                     it.toIntOrNull()?.let { hours -> viewModel.updateDevAdExpiry(hours) }
                                 }
                             },
-                            modifier = Modifier.width(80.dp),
+                            modifier = Modifier.width(100.dp),
                             singleLine = true,
                         )
                     },
@@ -261,29 +284,6 @@ fun SettingsScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun ThemeOption(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        onClick = onClick,
-        shape = MaterialTheme.shapes.small,
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-        modifier = modifier.fillMaxHeight(),
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-                color = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
-            )
         }
     }
 }
