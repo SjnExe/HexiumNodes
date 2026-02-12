@@ -16,15 +16,33 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = HexiumPrimaryDark,
+    onPrimary = HexiumOnPrimaryDark,
+    primaryContainer = HexiumPrimaryContainerDark,
+    onPrimaryContainer = HexiumOnPrimaryContainerDark,
+    secondary = HexiumSecondaryDark,
+    onSecondary = HexiumOnSecondaryDark,
+    secondaryContainer = HexiumSecondaryContainerDark,
+    onSecondaryContainer = HexiumOnSecondaryContainerDark,
+    tertiary = HexiumTertiaryDark,
+    onTertiary = HexiumOnTertiaryDark,
+    tertiaryContainer = HexiumTertiaryContainerDark,
+    onTertiaryContainer = HexiumOnTertiaryContainerDark
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
+    primary = HexiumPrimary,
+    onPrimary = HexiumOnPrimary,
+    primaryContainer = HexiumPrimaryContainer,
+    onPrimaryContainer = HexiumOnPrimaryContainer,
+    secondary = HexiumSecondary,
+    onSecondary = HexiumOnSecondary,
+    secondaryContainer = HexiumSecondaryContainer,
+    onSecondaryContainer = HexiumOnSecondaryContainer,
+    tertiary = HexiumTertiary,
+    onTertiary = HexiumOnTertiary,
+    tertiaryContainer = HexiumTertiaryContainer,
+    onTertiaryContainer = HexiumOnTertiaryContainer
 )
 
 @Composable
@@ -46,9 +64,8 @@ fun HexiumNodesTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
-            // Use property access syntax which is standard in Kotlin
-            // The setter method itself (setStatusBarColor) is what triggers the deprecation in some contexts
-            // but for Window.statusBarColor, property syntax is preferred.
+            // Using explicit setter to avoid 'var statusBarColor: Int is deprecated' property warning
+            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.primary.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
         }
