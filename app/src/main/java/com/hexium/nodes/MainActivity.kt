@@ -3,6 +3,7 @@ package com.hexium.nodes
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
@@ -11,6 +12,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.hexium.nodes.data.preferences.AppTheme
 import com.hexium.nodes.ui.MainViewModel
 import com.hexium.nodes.ui.home.HomeScreen
 import com.hexium.nodes.ui.login.LoginScreen
@@ -28,8 +30,14 @@ class MainActivity : ComponentActivity() {
             val settingsViewModel: SettingsViewModel = hiltViewModel()
             val settingsState by settingsViewModel.uiState.collectAsState()
 
+            val isDarkTheme = when (settingsState.themeMode) {
+                AppTheme.SYSTEM -> isSystemInDarkTheme()
+                AppTheme.DARK -> true
+                AppTheme.LIGHT -> false
+            }
+
             HexiumNodesTheme(
-                darkTheme = settingsState.isDarkTheme,
+                darkTheme = isDarkTheme,
                 dynamicColor = settingsState.useDynamicColors
             ) {
                 Surface(color = MaterialTheme.colorScheme.background) {
@@ -65,13 +73,21 @@ class MainActivity : ComponentActivity() {
                         composable("home") {
                             val mainViewModel: MainViewModel = hiltViewModel()
                             HomeScreen(
-                                viewModel = mainViewModel
+                                viewModel = mainViewModel,
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                }
                             )
                         }
                         composable("settings") {
                             SettingsScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
+                                },
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
                                 }
                             )
                         }
