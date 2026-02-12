@@ -3,6 +3,8 @@ package com.hexium.nodes.data
 interface AdRepository {
     suspend fun getAvailableAds(): Int
     suspend fun getMaxAds(): Int
+    suspend fun getAdRewardRate(): Float
+    suspend fun getAdExpiryHours(): Int
     suspend fun getCredits(): Float
     suspend fun watchAd(): Boolean
     suspend fun getAdHistory(): List<Long>

@@ -7,12 +7,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.ClipEntry
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.BuildConfig
 import com.hexium.nodes.data.preferences.AppTheme
 import com.hexium.nodes.ui.viewmodel.SettingsViewModel
@@ -29,7 +28,7 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    val clipboardManager = LocalClipboardManager.current
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboard.current
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -69,6 +68,15 @@ fun SettingsScreen(
                                 )
                             }
                         }
+                    }
+                )
+                HorizontalDivider()
+
+                ListItem(
+                    headlineContent = { Text("Logout", color = MaterialTheme.colorScheme.error) },
+                    modifier = Modifier.clickable {
+                        viewModel.logout()
+                        onLogout()
                     }
                 )
                 HorizontalDivider()
@@ -124,24 +132,23 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Logout Button (Only if logged in)
-            if (uiState.isLoggedIn) {
-                ListItem(
-                    headlineContent = { Text("Logout", color = MaterialTheme.colorScheme.error) },
-                    modifier = Modifier.clickable {
-                        viewModel.logout()
-                        onLogout()
-                    }
-                )
-                HorizontalDivider()
-            }
-
             if (BuildConfig.FLAVOR == "dev") {
                 ListItem(headlineContent = { Text("Developer Options", color = MaterialTheme.colorScheme.primary) })
 
                 // Dev Configs
                 var adLimit by remember { mutableStateOf(uiState.devAdLimit.toString()) }
                 var adRate by remember { mutableStateOf(uiState.devAdRate.toString()) }
+        var adExpiry by remember { mutableStateOf(uiState.devAdExpiry.toString()) }
+
+        LaunchedEffect(uiState.devAdLimit) {
+            adLimit = uiState.devAdLimit.toString()
+        }
+        LaunchedEffect(uiState.devAdRate) {
+            adRate = uiState.devAdRate.toString()
+        }
+        LaunchedEffect(uiState.devAdExpiry) {
+            adExpiry = uiState.devAdExpiry.toString()
+        }
 
                 ListItem(
                     headlineContent = { Text("Ad Limit") },
@@ -175,14 +182,29 @@ fun SettingsScreen(
                     }
                 )
 
+        ListItem(
+            headlineContent = { Text("Ad Expiry (Hours)") },
+            trailingContent = {
+                OutlinedTextField(
+                    value = adExpiry,
+                    onValueChange = {
+                        if (it.all { char -> char.isDigit() }) {
+                            adExpiry = it
+                            it.toIntOrNull()?.let { hours -> viewModel.updateDevAdExpiry(hours) }
+                        }
+                    },
+                    modifier = Modifier.width(80.dp),
+                    singleLine = true
+                )
+            }
+        )
+
 
                 ListItem(
                     headlineContent = { Text("Open Network Inspector") },
                     modifier = Modifier.clickable {
                         try {
-                            val chuckerClass = Class.forName("com.chuckerteam.chucker.api.Chucker")
-                            val method = chuckerClass.getMethod("getLaunchIntent", android.content.Context::class.java)
-                            val intent = method.invoke(null, context) as android.content.Intent
+                    val intent = com.chuckerteam.chucker.api.Chucker.getLaunchIntent(context)
                             context.startActivity(intent)
                         } catch (e: Exception) {
                             e.printStackTrace()
@@ -202,7 +224,8 @@ fun SettingsScreen(
                             scope.launch(Dispatchers.IO) {
                                 val logs = LogUtils.captureLogs()
                                 withContext(Dispatchers.Main) {
-                                    clipboardManager.setText(AnnotatedString(logs))
+                                    val clipData = android.content.ClipData.newPlainText("Hexium Logs", logs)
+                                    clipboardManager.setClipEntry(ClipEntry(clipData))
                                     Toast.makeText(context, "Logs copied to clipboard", Toast.LENGTH_SHORT).show()
                                 }
                             }

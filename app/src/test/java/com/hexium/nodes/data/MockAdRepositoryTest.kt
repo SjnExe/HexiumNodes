@@ -1,12 +1,16 @@
 package com.hexium.nodes.data
 
 import android.content.SharedPreferences
+import com.hexium.nodes.data.preferences.AppTheme
+import com.hexium.nodes.data.preferences.SettingsData
+import com.hexium.nodes.data.preferences.SettingsRepository
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.mockito.Answers
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
@@ -17,17 +21,30 @@ class MockAdRepositoryTest {
 
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
+    private lateinit var settingsRepository: SettingsRepository
     private lateinit var repository: MockAdRepository
 
-    @Before
+    @BeforeEach
     fun setup() {
         sharedPreferences = mock()
         // Use RETURNS_SELF to automatically handle chaining for Editor methods
         editor = mock(defaultAnswer = Answers.RETURNS_SELF)
+        settingsRepository = mock()
 
         whenever(sharedPreferences.edit()).thenReturn(editor)
 
-        repository = MockAdRepository(sharedPreferences)
+        // Mock default settings flow
+        val defaultSettings = SettingsData(
+            themeMode = AppTheme.SYSTEM,
+            useDynamicColors = false,
+            serverUrl = "http://test",
+            devAdLimit = 50,
+            devAdRate = 1.0f,
+            devAdExpiry = 24
+        )
+        whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
+
+        repository = MockAdRepository(sharedPreferences, settingsRepository)
     }
 
     @Test

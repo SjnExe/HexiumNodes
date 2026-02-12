@@ -80,7 +80,6 @@ android {
         create("dev") {
             dimension = "version"
             applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
         }
         create("stable") {
             dimension = "version"
@@ -100,6 +99,12 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
+
+    testOptions {
+        unitTests.all {
+            it.useJUnitPlatform()
         }
     }
 }
@@ -148,7 +153,8 @@ dependencies {
     releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
 
     // Testing
-    testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.core)
     testImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.androidx.junit)

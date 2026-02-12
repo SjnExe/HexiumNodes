@@ -18,7 +18,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.R
 import com.hexium.nodes.ui.viewmodel.LoginUiState
 import com.hexium.nodes.ui.viewmodel.LoginViewModel
@@ -76,7 +76,8 @@ fun LoginScreen(
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
+                    imeAction = ImeAction.Next,
+                    autoCorrectEnabled = false
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -102,7 +103,7 @@ fun LoginScreen(
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     imeAction = ImeAction.Done,
-                    autoCorrect = false
+                    autoCorrectEnabled = false
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = {
@@ -112,6 +113,22 @@ fun LoginScreen(
                 ),
                 modifier = Modifier.fillMaxWidth()
             )
+
+            // Forgot Password Link
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Text(
+                    text = "Forgot Password?",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://client.hexiumnodes.com/index.php?rp=/password/reset"))
+                        context.startActivity(intent)
+                    }
+                )
+            }
 
             if (uiState is LoginUiState.Error) {
                 Text(
@@ -140,18 +157,6 @@ fun LoginScreen(
                     Text("Login")
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Forgot Password Link
-            Text(
-                text = "Forgot Password?",
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://client.hexiumnodes.com/index.php?rp=/password/reset"))
-                    context.startActivity(intent)
-                }
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 
