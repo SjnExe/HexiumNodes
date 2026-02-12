@@ -10,7 +10,7 @@ plugins {
 
 android {
     namespace = "com.hexium.nodes"
-    compileSdk = 36
+    compileSdk = 35
 
     signingConfigs {
         create("release") {
@@ -46,7 +46,7 @@ android {
     defaultConfig {
         applicationId = "com.hexium.nodes"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
 
         val versionCodeParam = project.findProperty("versionCode") as? String
         val versionNameParam = project.findProperty("versionName") as? String
@@ -88,8 +88,8 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_25
-        targetCompatibility = JavaVersion.VERSION_25
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     buildFeatures {
