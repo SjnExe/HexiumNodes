@@ -16,6 +16,8 @@ jobs:
     permissions:
       contents: write
       packages: write
+    env:
+      GRADLE_OPTS: "--enable-native-access=ALL-UNNAMED"
     steps:
       - uses: actions/checkout@v6
         with:
