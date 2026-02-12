@@ -2,6 +2,7 @@ package com.hexium.nodes.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.hexium.nodes.data.AdRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,15 +17,22 @@ sealed class AuthState {
 }
 
 @HiltViewModel
-class SplashViewModel @Inject constructor() : ViewModel() {
+class SplashViewModel @Inject constructor(
+    private val repository: AdRepository
+) : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState
 
     init {
+        checkAuth()
+    }
+
+    private fun checkAuth() {
         viewModelScope.launch {
             // Simulate check auth
             delay(1000)
-            _authState.value = AuthState.LoggedOut // Default for now
+            val isLoggedIn = repository.isLoggedIn()
+            _authState.value = if (isLoggedIn) AuthState.LoggedIn else AuthState.LoggedOut
         }
     }
 }

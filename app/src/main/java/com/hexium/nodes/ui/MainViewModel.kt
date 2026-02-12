@@ -24,6 +24,12 @@ class MainViewModel @Inject constructor(
     private val _maxAds = MutableStateFlow(50)
     val maxAds: StateFlow<Int> = _maxAds.asStateFlow()
 
+    private val _adRate = MutableStateFlow(1.0f)
+    val adRate: StateFlow<Float> = _adRate.asStateFlow()
+
+    private val _adExpiryHours = MutableStateFlow(24)
+    val adExpiryHours: StateFlow<Int> = _adExpiryHours.asStateFlow()
+
     private val _history = MutableStateFlow<List<Long>>(emptyList())
     val history: StateFlow<List<Long>> = _history.asStateFlow()
 
@@ -79,6 +85,8 @@ class MainViewModel @Inject constructor(
                 _availableAds.value = repository.getAvailableAds()
                 _maxAds.value = repository.getMaxAds()
                 _history.value = repository.getAdHistory()
+                _adRate.value = repository.getAdRewardRate()
+                _adExpiryHours.value = repository.getAdExpiryHours()
             }
         }
     }

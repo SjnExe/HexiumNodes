@@ -28,7 +28,8 @@ class SettingsViewModel @Inject constructor(
                     useDynamicColors = settings.useDynamicColors,
                     serverUrl = settings.serverUrl,
                     devAdLimit = settings.devAdLimit,
-                    devAdRate = settings.devAdRate
+                    devAdRate = settings.devAdRate,
+                    devAdExpiry = settings.devAdExpiry
                 )
             }
         }
@@ -66,15 +67,15 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setDevAdRate(rate) }
     }
 
+    fun updateDevAdExpiry(hours: Int) {
+        viewModelScope.launch { settingsRepository.setDevAdExpiry(hours) }
+    }
+
     fun logout() {
         viewModelScope.launch {
             adRepository.logout()
             _uiState.value = _uiState.value.copy(isLoggedIn = false)
         }
-    }
-
-    fun launchChucker() {
-        // Implementation to launch Chucker Intent
     }
 }
 
@@ -86,5 +87,6 @@ data class SettingsUiState(
     val username: String? = null,
     val email: String? = null,
     val devAdLimit: Int = 50,
-    val devAdRate: Float = 1.0f
+    val devAdRate: Float = 1.0f,
+    val devAdExpiry: Int = 24
 )

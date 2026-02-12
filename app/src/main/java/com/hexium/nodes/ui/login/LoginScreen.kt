@@ -114,6 +114,22 @@ fun LoginScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            // Forgot Password Link
+            Box(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                Text(
+                    text = "Forgot Password?",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://client.hexiumnodes.com/index.php?rp=/password/reset"))
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
             if (uiState is LoginUiState.Error) {
                 Text(
                     text = (uiState as LoginUiState.Error).message,
@@ -141,18 +157,6 @@ fun LoginScreen(
                     Text("Login")
                 }
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Forgot Password Link
-            Text(
-                text = "Forgot Password?",
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clickable {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://client.hexiumnodes.com/index.php?rp=/password/reset"))
-                    context.startActivity(intent)
-                }
-            )
 
             Spacer(modifier = Modifier.height(16.dp))
 

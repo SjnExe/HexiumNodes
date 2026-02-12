@@ -80,7 +80,6 @@ android {
         create("dev") {
             dimension = "version"
             applicationIdSuffix = ".dev"
-            versionNameSuffix = "-dev"
         }
         create("stable") {
             dimension = "version"

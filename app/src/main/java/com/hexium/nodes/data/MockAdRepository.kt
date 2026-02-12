@@ -14,8 +14,6 @@ class MockAdRepository @Inject constructor(
     private val settingsRepository: SettingsRepository
 ) : AdRepository {
 
-    private val REGEN_TIME_MS = 24 * 60 * 60 * 1000L // 24 hours
-
     override suspend fun getAvailableAds(): Int {
         return withContext(Dispatchers.IO) {
             val maxAds = getMaxAds()
@@ -27,6 +25,14 @@ class MockAdRepository @Inject constructor(
 
     override suspend fun getMaxAds(): Int = withContext(Dispatchers.IO) {
         return@withContext settingsRepository.settingsFlow.first().devAdLimit
+    }
+
+    override suspend fun getAdRewardRate(): Float = withContext(Dispatchers.IO) {
+        return@withContext settingsRepository.settingsFlow.first().devAdRate
+    }
+
+    override suspend fun getAdExpiryHours(): Int = withContext(Dispatchers.IO) {
+        return@withContext settingsRepository.settingsFlow.first().devAdExpiry
     }
 
     override suspend fun getCredits(): Float = withContext(Dispatchers.IO) {
@@ -96,12 +102,15 @@ class MockAdRepository @Inject constructor(
         return prefs.getStringSet("ad_history", emptySet()) ?: emptySet()
     }
 
-    private fun cleanUpExpiredAds() {
+    private suspend fun cleanUpExpiredAds() {
         val history = getHistoryInternal()
         val now = System.currentTimeMillis()
+        val expiryHours = settingsRepository.settingsFlow.first().devAdExpiry
+        val expiryMs = expiryHours * 60 * 60 * 1000L
+
         val validAds = history.filter {
             val timestamp = it.toLongOrNull() ?: 0L
-            (now - timestamp) < REGEN_TIME_MS
+            (now - timestamp) < expiryMs
         }.toSet()
 
         if (validAds.size != history.size) {

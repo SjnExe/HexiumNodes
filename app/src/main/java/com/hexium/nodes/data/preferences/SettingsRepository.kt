@@ -31,6 +31,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val SERVER_URL = stringPreferencesKey("server_url")
         val DEV_AD_LIMIT = intPreferencesKey("dev_ad_limit")
         val DEV_AD_RATE = floatPreferencesKey("dev_ad_rate")
+        val DEV_AD_EXPIRY = intPreferencesKey("dev_ad_expiry")
     }
 
     val settingsFlow: Flow<SettingsData> = dataStore.data.map { preferences ->
@@ -46,7 +47,8 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             useDynamicColors = preferences[DYNAMIC_COLORS] ?: false,
             serverUrl = preferences[SERVER_URL] ?: "https://placeholder.hexium.nodes",
             devAdLimit = preferences[DEV_AD_LIMIT] ?: 50,
-            devAdRate = preferences[DEV_AD_RATE] ?: 1.0f
+            devAdRate = preferences[DEV_AD_RATE] ?: 1.0f,
+            devAdExpiry = preferences[DEV_AD_EXPIRY] ?: 24
         )
     }
 
@@ -69,6 +71,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     suspend fun setDevAdRate(rate: Float) {
         dataStore.edit { it[DEV_AD_RATE] = rate }
     }
+
+    suspend fun setDevAdExpiry(hours: Int) {
+        dataStore.edit { it[DEV_AD_EXPIRY] = hours }
+    }
 }
 
 data class SettingsData(
@@ -76,5 +82,6 @@ data class SettingsData(
     val useDynamicColors: Boolean,
     val serverUrl: String,
     val devAdLimit: Int,
-    val devAdRate: Float
+    val devAdRate: Float,
+    val devAdExpiry: Int
 )

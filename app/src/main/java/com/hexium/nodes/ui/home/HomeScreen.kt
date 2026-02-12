@@ -30,6 +30,8 @@ fun HomeScreen(
     val maxAds by viewModel.maxAds.collectAsState()
     val history by viewModel.history.collectAsState()
     val username by viewModel.username.collectAsState()
+    val adRate by viewModel.adRate.collectAsState()
+    val adExpiryHours by viewModel.adExpiryHours.collectAsState()
 
     // Initial load
     LaunchedEffect(Unit) {
@@ -107,7 +109,10 @@ fun HomeScreen(
                 enabled = availableAds > 0,
                 modifier = Modifier.fillMaxWidth().height(56.dp)
             ) {
-                Text("Watch Ad")
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("Watch Ad")
+                    Text("Earn $adRate Credits", style = MaterialTheme.typography.labelSmall)
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
@@ -134,7 +139,7 @@ fun HomeScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(history) { timestamp ->
-                    HistoryItem(timestamp)
+                    HistoryItem(timestamp, adExpiryHours)
                 }
             }
 
@@ -165,15 +170,17 @@ fun HomeScreen(
 }
 
 @Composable
-fun HistoryItem(timestamp: Long) {
+fun HistoryItem(timestamp: Long, expiryHours: Int) {
     val now = System.currentTimeMillis()
-    val diff = now - timestamp
+    val expiryTime = timestamp + (expiryHours.toLong() * DateUtils.HOUR_IN_MILLIS)
+    val remaining = expiryTime - now
 
-    val relativeTime = when {
-        diff < DateUtils.MINUTE_IN_MILLIS -> "${diff / 1000} seconds ago"
-        diff < DateUtils.HOUR_IN_MILLIS -> "${diff / DateUtils.MINUTE_IN_MILLIS} minutes ago"
-        diff < DateUtils.DAY_IN_MILLIS -> "${diff / DateUtils.HOUR_IN_MILLIS} hours ago"
-        else -> "${diff / DateUtils.DAY_IN_MILLIS} days ago"
+    val relativeTime = if (remaining <= 0) {
+        "Expired"
+    } else if (remaining < DateUtils.HOUR_IN_MILLIS) {
+        "Expires in ${remaining / DateUtils.MINUTE_IN_MILLIS} minutes"
+    } else {
+        "Expires in ${remaining / DateUtils.HOUR_IN_MILLIS} hours"
     }
 
     val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss z", Locale.getDefault())

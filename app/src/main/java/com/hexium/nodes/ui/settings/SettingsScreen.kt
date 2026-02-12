@@ -71,6 +71,15 @@ fun SettingsScreen(
                     }
                 )
                 HorizontalDivider()
+
+                ListItem(
+                    headlineContent = { Text("Logout", color = MaterialTheme.colorScheme.error) },
+                    modifier = Modifier.clickable {
+                        viewModel.logout()
+                        onLogout()
+                    }
+                )
+                HorizontalDivider()
             }
 
             // Theme Selection
@@ -123,24 +132,23 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-            // Logout Button (Only if logged in)
-            if (uiState.isLoggedIn) {
-                ListItem(
-                    headlineContent = { Text("Logout", color = MaterialTheme.colorScheme.error) },
-                    modifier = Modifier.clickable {
-                        viewModel.logout()
-                        onLogout()
-                    }
-                )
-                HorizontalDivider()
-            }
-
             if (BuildConfig.FLAVOR == "dev") {
                 ListItem(headlineContent = { Text("Developer Options", color = MaterialTheme.colorScheme.primary) })
 
                 // Dev Configs
                 var adLimit by remember { mutableStateOf(uiState.devAdLimit.toString()) }
                 var adRate by remember { mutableStateOf(uiState.devAdRate.toString()) }
+        var adExpiry by remember { mutableStateOf(uiState.devAdExpiry.toString()) }
+
+        LaunchedEffect(uiState.devAdLimit) {
+            adLimit = uiState.devAdLimit.toString()
+        }
+        LaunchedEffect(uiState.devAdRate) {
+            adRate = uiState.devAdRate.toString()
+        }
+        LaunchedEffect(uiState.devAdExpiry) {
+            adExpiry = uiState.devAdExpiry.toString()
+        }
 
                 ListItem(
                     headlineContent = { Text("Ad Limit") },
@@ -174,14 +182,29 @@ fun SettingsScreen(
                     }
                 )
 
+        ListItem(
+            headlineContent = { Text("Ad Expiry (Hours)") },
+            trailingContent = {
+                OutlinedTextField(
+                    value = adExpiry,
+                    onValueChange = {
+                        if (it.all { char -> char.isDigit() }) {
+                            adExpiry = it
+                            it.toIntOrNull()?.let { hours -> viewModel.updateDevAdExpiry(hours) }
+                        }
+                    },
+                    modifier = Modifier.width(80.dp),
+                    singleLine = true
+                )
+            }
+        )
+
 
                 ListItem(
                     headlineContent = { Text("Open Network Inspector") },
                     modifier = Modifier.clickable {
                         try {
-                            val chuckerClass = Class.forName("com.chuckerteam.chucker.api.Chucker")
-                            val method = chuckerClass.getMethod("getLaunchIntent", android.content.Context::class.java)
-                            val intent = method.invoke(null, context) as android.content.Intent
+                    val intent = com.chuckerteam.chucker.api.Chucker.getLaunchIntent(context)
                             context.startActivity(intent)
                         } catch (e: Exception) {
                             e.printStackTrace()
