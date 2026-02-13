@@ -1,7 +1,8 @@
 {
-  "devAdLimit": 100,
-  "devAdRate": 0.50,
-  "devAdExpiry": 12,
+  "devAdLimit": 20,
+  "devAdRate": 1.0,
+  "devAdExpiry": 24,
+  "devAdDelaySeconds": 10,
   "maintenance": false,
   "minVersion": 1,
   "testUsers": [
