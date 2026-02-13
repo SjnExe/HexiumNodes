@@ -10,38 +10,24 @@
 
 ## 2. Recent Progress & Current State
 ### 2.1 Completed
-- **CI/CD Refactor:**
-    - Split into `setup`, `lint`, `build`, `test_arm`, `release` jobs.
-    - Implemented "floating dev tag" strategy for Dev releases.
-    - Added real-time logging (`tee`) to CI.
-    - Signing logic: Uses `KEYSTORE_BASE64` secret for Stable; falls back to generated debug key for Dev/PRs.
-- **Dependencies:** Added `security-crypto`, `datastore`, `play-integrity`, `chucker` (debug).
-- **Files Created:**
-    - `SecurityManager.kt`, `SecurityModule.kt` (Encryption/Integrity).
-    - `SettingsScreen.kt`, `SettingsViewModel.kt`, `SettingsRepository.kt` (Settings & DataStore).
-    - `SplashScreen.kt`, `SplashViewModel.kt` (Auth check).
-    - `Theme.kt` (Dynamic colors).
-    - `ic_settings.xml` (Drawable).
+- **Workflow Optimization:**
+    - Removed redundant steps.
+    - Implemented fail-fast Lint check.
+    - Consolidate artifact uploads.
+- **UI Refactoring:**
+    - **Theme:** Fixed deprecated status bar warning; implemented Brand Colors fallback for non-Material You devices.
+    - **Splash Screen:** Replaced text with `CircularProgressIndicator`; implemented immediate auth check.
+    - **Login Screen:** Added Username/Password fields; improved UI.
+- **Developer Tools (Dev Flavor):**
+    - Added "Copy Logs" and "Save Logs" buttons in Settings.
+    - Implemented `LogUtils` to capture and filter app logs.
+- **Configuration:**
+    - Updated default Server URL to `https://placeholder.hexium.nodes`.
 
-### 2.2 Pending Fixes (Blocking Build)
-The local build `assembleDevRelease` is failing with compilation errors:
-1.  **MainActivity.kt**:
-    - Unresolved `HexiumNodesTheme` (Check `Theme.kt` package/imports).
-    - Unresolved `HomeScreen` parameters (Signature mismatch).
-2.  **LoginScreen.kt**:
-    - Unresolved `R.drawable.ic_settings` (Resource ID not found).
-3.  **HomeScreen.kt**:
-    - Need to verify signature to match `MainActivity` usage.
+### 2.2 Pending Tasks
+- **Modularization:** Refactor the app into multiple modules (core, data, ui, app) to improve build times and separation of concerns.
 
-## 3. Next Steps (For Next Session)
-1.  **Fix Compilation Errors**:
-    - **Check `Theme.kt`**: Verify package declaration `package com.hexium.nodes.ui.theme` and import it in `MainActivity`.
-    - **Check `HomeScreen.kt`**: Read file to confirm constructor parameters. Update `MainActivity` call site or `HomeScreen` definition.
-    - **Check Resources**: Ensure `ic_settings.xml` is valid. Run `./gradlew clean` to regenerate `R` class if needed.
-2.  **Verify Build**: Run `./gradlew assembleDevRelease`.
-3.  **Submit Changes**: Push the `workflow-refactor` branch.
-
-## 4. Maintenance Guide
+## 3. Maintenance Guide
 ### Building Locally
 1.  **Debug:** `./gradlew assembleDevDebug`
 2.  **Release:** `./gradlew assembleDevRelease` (Uses debug keystore fallback in dev flavor).
@@ -59,7 +45,8 @@ The local build `assembleDevRelease` is failing with compilation errors:
   ```
 - Upload `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` to GitHub Secrets.
 
-## 5. Future Roadmap
+## 4. Future Roadmap
+- **Modularization**: Split into feature modules.
 - **Server Integration**: Switch from Mock to Real API (Auth, Ad Limits).
 - **Play Integrity**: Implement server-side verification of client tokens.
 - **Optimization**: Verify R8 shrinking efficiency.
