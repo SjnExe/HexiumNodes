@@ -16,8 +16,16 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = java.net.URI("https://jitpack.io") }
     }
 }
 
-rootProject.name = "Hexium Nodes"
+rootProject.name = "HexiumNodes"
 include(":app")
+include(":core:common")
+include(":core:model")
+include(":core:ui")
+include(":data")
+include(":feature:auth")
+include(":feature:home")
+include(":feature:settings")

@@ -12,14 +12,14 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.hexium.nodes.core.ui.theme.HexiumNodesTheme
 import com.hexium.nodes.data.preferences.AppTheme
-import com.hexium.nodes.ui.MainViewModel
-import com.hexium.nodes.ui.home.HomeScreen
-import com.hexium.nodes.ui.login.LoginScreen
-import com.hexium.nodes.ui.splash.SplashScreen
-import com.hexium.nodes.ui.settings.SettingsScreen
-import com.hexium.nodes.ui.theme.HexiumNodesTheme
-import com.hexium.nodes.ui.viewmodel.SettingsViewModel
+import com.hexium.nodes.feature.auth.login.LoginScreen
+import com.hexium.nodes.feature.auth.splash.SplashScreen
+import com.hexium.nodes.feature.home.HomeScreen
+import com.hexium.nodes.feature.home.HomeViewModel
+import com.hexium.nodes.feature.settings.settings.SettingsScreen
+import com.hexium.nodes.feature.settings.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -38,7 +38,7 @@ class MainActivity : ComponentActivity() {
 
             HexiumNodesTheme(
                 darkTheme = isDarkTheme,
-                dynamicColor = settingsState.useDynamicColors
+                dynamicColor = settingsState.useDynamicColors,
             ) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     val navController = rememberNavController()
@@ -55,7 +55,10 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("home") {
                                         popUpTo("splash") { inclusive = true }
                                     }
-                                }
+                                },
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                },
                             )
                         }
                         composable("login") {
@@ -67,16 +70,16 @@ class MainActivity : ComponentActivity() {
                                 },
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
-                                }
+                                },
                             )
                         }
                         composable("home") {
-                            val mainViewModel: MainViewModel = hiltViewModel()
+                            val mainViewModel: HomeViewModel = hiltViewModel()
                             HomeScreen(
                                 viewModel = mainViewModel,
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
-                                }
+                                },
                             )
                         }
                         composable("settings") {
@@ -88,7 +91,7 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("login") {
                                         popUpTo("home") { inclusive = true }
                                     }
-                                }
+                                },
                             )
                         }
                     }

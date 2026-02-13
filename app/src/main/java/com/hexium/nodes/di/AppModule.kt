@@ -19,14 +19,14 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindAdRepository(
-        mockAdRepository: MockAdRepository
+        mockAdRepository: MockAdRepository,
     ): AdRepository
 
     companion object {
         @Provides
         @Singleton
         fun provideSharedPreferences(
-            @ApplicationContext context: Context
+            @ApplicationContext context: Context,
         ): SharedPreferences {
             return context.getSharedPreferences("hexium_prefs", Context.MODE_PRIVATE)
         }
