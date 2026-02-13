@@ -37,6 +37,7 @@ fun HomeScreen(
     val adRate by viewModel.adRate.collectAsState()
     val adExpiryHours by viewModel.adExpiryHours.collectAsState()
     val isAdLoaded by viewModel.isAdLoaded.collectAsState()
+    val adCooldownSeconds by viewModel.adCooldownSeconds.collectAsState()
 
     val context = LocalContext.current
     val activity = context as? Activity
@@ -112,20 +113,23 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            var isClickable by remember { mutableStateOf(true) }
+            // Removed local debounce `isClickable` in favor of server-side delay `adCooldownSeconds`
+            val isOnCooldown = adCooldownSeconds > 0
+            val isEnabled = availableAds > 0 && isAdLoaded && !isOnCooldown
 
             Button(
                 onClick = {
-                    if (isClickable) {
-                        isClickable = false
+                    if (isEnabled) {
                         activity?.let { viewModel.watchAd(it) }
                     }
                 },
-                enabled = availableAds > 0 && isAdLoaded && isClickable,
+                enabled = isEnabled,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (isAdLoaded) {
+                    if (isOnCooldown) {
+                        Text("Next ad in ${adCooldownSeconds}s")
+                    } else if (isAdLoaded) {
                         Text(stringResource(R.string.watch_ad))
                         Text(stringResource(R.string.earn_credits, adRate.toString()), style = MaterialTheme.typography.labelSmall)
                     } else {
@@ -136,13 +140,6 @@ fun HomeScreen(
                             strokeWidth = 2.dp
                         )
                     }
-                }
-            }
-
-            LaunchedEffect(isClickable) {
-                if (!isClickable) {
-                    delay(2000) // Debounce 2 seconds
-                    isClickable = true
                 }
             }
 

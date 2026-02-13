@@ -3,6 +3,7 @@ package com.hexium.nodes.ads
 import android.app.Activity
 import android.app.Application
 import android.content.Context
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -29,16 +30,19 @@ class AppOpenAdManager @Inject constructor(
     private var currentActivity: Activity? = null
 
     companion object {
-        private const val AD_UNIT_ID = "ca-app-pub-3940256099942544/3419835294" // Google Test ID
+        // Test Ad Unit IDs
+        private const val AD_UNIT_ID_PORTRAIT = "ca-app-pub-3940256099942544/3419835294"
+        private const val AD_UNIT_ID_LANDSCAPE = "ca-app-pub-3940256099942544/5662855259"
         private const val TAG = "AppOpenAdManager"
     }
 
     init {
         application.registerActivityLifecycleCallbacks(this)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
+        // Note: ProcessLifecycleOwner observer is added in HexiumApp to control initialization timing
     }
 
     override fun onStart(owner: LifecycleOwner) {
+        // This is called when the App moves to Foreground (or on first launch if already foreground)
         showAdIfAvailable()
     }
 
@@ -49,21 +53,28 @@ class AppOpenAdManager @Inject constructor(
 
         isLoadingAd = true
         val request = AdRequest.Builder().build()
+        val orientation = context.resources.configuration.orientation
+        val adUnitId = if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            AD_UNIT_ID_LANDSCAPE
+        } else {
+            AD_UNIT_ID_PORTRAIT
+        }
+
         AppOpenAd.load(
             context,
-            AD_UNIT_ID,
+            adUnitId,
             request,
             object : AppOpenAd.AppOpenAdLoadCallback() {
                 override fun onAdLoaded(ad: AppOpenAd) {
                     appOpenAd = ad
                     isLoadingAd = false
                     loadTime = Date().time
-                    LogUtils.d(TAG, "App Open Ad loaded.")
+                    LogUtils.d(TAG, "App Open Ad loaded ($adUnitId).")
                 }
 
                 override fun onAdFailedToLoad(loadAdError: LoadAdError) {
                     isLoadingAd = false
-                    LogUtils.e(TAG, "App Open Ad failed to load: " + loadAdError.message, null)
+                    LogUtils.e(TAG, "App Open Ad failed to load ($adUnitId): ${loadAdError.code} - ${loadAdError.message} - ${loadAdError.domain}", null)
                 }
             }
         )
@@ -92,6 +103,8 @@ class AppOpenAdManager @Inject constructor(
                 isShowingAd = true
                 appOpenAd?.show(activity)
             } ?: run {
+                 // If no activity is available, we can't show.
+                 // But we can try to reload if expired.
                  loadAd(application)
             }
         } else {

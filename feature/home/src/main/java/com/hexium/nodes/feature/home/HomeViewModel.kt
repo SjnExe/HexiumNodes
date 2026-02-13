@@ -6,9 +6,11 @@ import androidx.lifecycle.viewModelScope
 import com.hexium.nodes.data.AdRepository
 import com.hexium.nodes.feature.home.ads.RewardedAdManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -45,11 +47,16 @@ class HomeViewModel @Inject constructor(
     private val _loginError = MutableStateFlow<String?>(null)
     val loginError: StateFlow<String?> = _loginError.asStateFlow()
 
+    // Seconds remaining until next ad
+    private val _adCooldownSeconds = MutableStateFlow(0L)
+    val adCooldownSeconds: StateFlow<Long> = _adCooldownSeconds.asStateFlow()
+
     val isAdLoaded: StateFlow<Boolean> = adManager.isAdLoaded
 
     init {
         checkLoginState()
         adManager.loadAd()
+        startCooldownTimer()
     }
 
     private fun checkLoginState() {
@@ -58,6 +65,20 @@ class HomeViewModel @Inject constructor(
             if (_isLoggedIn.value) {
                 _username.value = repository.getUsername()
                 refreshData()
+            }
+        }
+    }
+
+    private fun startCooldownTimer() {
+        viewModelScope.launch {
+            while (isActive) {
+                if (_isLoggedIn.value) {
+                    val nextTime = repository.getNextAdAvailableTime()
+                    val now = System.currentTimeMillis()
+                    val remaining = ((nextTime - now) / 1000L).coerceAtLeast(0L)
+                    _adCooldownSeconds.value = remaining
+                }
+                delay(1000L) // Update every second
             }
         }
     }
@@ -93,11 +114,19 @@ class HomeViewModel @Inject constructor(
                 _history.value = repository.getAdHistory()
                 _adRate.value = repository.getAdRewardRate()
                 _adExpiryHours.value = repository.getAdExpiryHours()
+
+                // Refresh cooldown immediately
+                val nextTime = repository.getNextAdAvailableTime()
+                val now = System.currentTimeMillis()
+                _adCooldownSeconds.value = ((nextTime - now) / 1000L).coerceAtLeast(0L)
             }
         }
     }
 
     fun watchAd(activity: Activity) {
+        // Double check cooldown locally before showing
+        if (_adCooldownSeconds.value > 0) return
+
         adManager.showAd(activity) { _ ->
             // User earned reward
             viewModelScope.launch {
