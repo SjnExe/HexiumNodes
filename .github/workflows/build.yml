@@ -45,7 +45,9 @@ jobs:
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # PR Dev Build (e.g. 1.4.6-dev-PR9.34)
             PR_NUMBER=${{ github.event.pull_request.number }}
-            PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+            RAW_PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+            PR_COMMITS=$((RAW_PR_COMMITS - 1))
+            if [ $PR_COMMITS -lt 0 ]; then PR_COMMITS=0; fi
             VERSION_NAME="${VERSION_BASE}-dev-PR${PR_NUMBER}.${PR_COMMITS}"
             VERSION_CODE=$COMMIT_COUNT
             IS_STABLE=false

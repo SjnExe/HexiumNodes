@@ -139,7 +139,8 @@ dependencies {
 
     // Debugging (Dev only)
     debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
-    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+    "devReleaseImplementation"("com.github.chuckerteam.chucker:library:4.0.0")
+    "stableReleaseImplementation"("com.github.chuckerteam.chucker:library-no-op:4.0.0")
 
     // Testing
     testImplementation(libs.junit.jupiter)

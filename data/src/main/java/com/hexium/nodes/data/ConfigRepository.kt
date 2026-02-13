@@ -1,5 +1,6 @@
 package com.hexium.nodes.data
 
+import com.hexium.nodes.core.common.util.LogUtils
 import com.hexium.nodes.data.model.RemoteConfig
 import com.hexium.nodes.data.preferences.SettingsRepository
 import com.hexium.nodes.data.remote.ConfigService
@@ -35,7 +36,7 @@ class ConfigRepository @Inject constructor(
 
             config
         } catch (e: Exception) {
-            e.printStackTrace()
+            LogUtils.e("ConfigRepository", "Fetch failed for $fullUrl", e)
             null
         }
     }

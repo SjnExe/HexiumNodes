@@ -4,7 +4,7 @@
 **Hexium Nodes** is an Android application where users can earn credits by watching ads. The credits are intended to be used on the Hexium Nodes platform.
 - **Package Name:** `com.hexium.nodes`
 - **Minimum Android Version:** Android 7.0 (API 24)
-- **Target Android Version:** Android 15 (API 35)
+- **Target Android Version:** Android 16 (API 36)
 - **Architecture:** MVVM + Clean Architecture (Data, Domain, UI)
 - **Tech Stack:** Kotlin (JDK 25), Jetpack Compose, Hilt, Room, Retrofit.
 
@@ -45,11 +45,13 @@ The app follows **Modern Android Architecture** principles and is modularized:
 - [x] **CI Optimization:** Fail-fast Lint/Test steps, Artifact uploads.
 - [x] **GitHub Pages:** Workflow to manually publish `config/config.json`.
 - [x] **Remote Config:** App fetches config from Server URL (defaulting to GitHub Pages).
+- [x] **Versioning:** Fixed off-by-one error in PR version string.
 
 ### 4.3 UI/UX
 - [x] **Theme:** Material 3, Dynamic Colors, Dark/Light mode chips.
 - [x] **Settings:** Redesigned User Profile, Fixed Input Glitches.
 - [x] **Splash:** Instant launch feel, removed artificial delays, handled "Maintenance" and "Update Required" states.
+- [x] **Network Inspector:** Configured Chucker for Dev builds (Debug & Release) and handled launch errors.
 
 ## 5. Maintenance Guide
 ### Building Locally
