@@ -7,10 +7,10 @@ data class RemoteConfig(
     val devAdDelaySeconds: Long = 10,
     val maintenance: Boolean = false,
     val minVersion: Int = 1,
-    val testUsers: List<TestUser> = emptyList()
+    val testUsers: List<TestUser> = emptyList(),
 )
 
 data class TestUser(
     val username: String,
-    val password: String
+    val password: String,
 )

@@ -53,6 +53,11 @@ android {
         minSdk = 24
         targetSdk = 36
 
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_25
+            targetCompatibility = JavaVersion.VERSION_25
+        }
+
         val versionCodeParam = project.findProperty("versionCode") as? String
         val versionNameParam = project.findProperty("versionName") as? String
 
