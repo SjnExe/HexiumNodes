@@ -56,6 +56,9 @@ class MainActivity : ComponentActivity() {
                                         popUpTo("splash") { inclusive = true }
                                     }
                                 },
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
+                                },
                             )
                         }
                         composable("login") {

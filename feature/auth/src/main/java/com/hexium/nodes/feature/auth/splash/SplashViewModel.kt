@@ -31,6 +31,11 @@ class SplashViewModel @Inject constructor(
         checkAppStatus()
     }
 
+    fun retry() {
+        _authState.value = AuthState.Loading
+        checkAppStatus()
+    }
+
     private fun checkAppStatus() {
         viewModelScope.launch {
             val config = configRepository.fetchConfig()

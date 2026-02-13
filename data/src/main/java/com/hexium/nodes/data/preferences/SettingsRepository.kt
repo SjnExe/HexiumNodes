@@ -49,7 +49,7 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         SettingsData(
             themeMode = themeMode,
             useDynamicColors = preferences[DYNAMIC_COLORS] ?: false,
-            serverUrl = preferences[SERVER_URL] ?: "https://placeholder.hexium.nodes",
+            serverUrl = preferences[SERVER_URL] ?: "https://SjnExe.github.io/HexiumNodes",
             devAdLimit = preferences[DEV_AD_LIMIT] ?: 50,
             devAdRate = rate,
             devAdExpiry = preferences[DEV_AD_EXPIRY] ?: 24,

@@ -14,15 +14,13 @@ class ConfigRepository @Inject constructor(
 ) {
     suspend fun fetchConfig(): RemoteConfig? {
         val serverUrl = settingsRepository.settingsFlow.first().serverUrl
-        // Ensure serverUrl ends with / or handle it.
-        // If serverUrl is "https://user.github.io/repo", we need to append "/config/config.json"
-        // But Retrofit @Url replaces the whole path if it is absolute, or appends if relative?
-        // Actually, if I pass the full URL to @Url, it ignores base URL.
+        // GitHub Pages deploys the contents of the 'config' folder to the root of the site.
+        // So 'config.json' is accessible at the base URL + "config.json".
 
         val fullUrl = if (serverUrl.endsWith("/")) {
-            "${serverUrl}config/config.json"
+            "${serverUrl}config.json"
         } else {
-            "$serverUrl/config/config.json"
+            "$serverUrl/config.json"
         }
 
         return try {
