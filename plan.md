@@ -1,52 +1,67 @@
 # Hexium Nodes - Project Plan & Roadmap
 
 ## 1. Project Overview
-**Hexium Nodes** is an ad-reward application where users watch ads to earn credits.
+**Hexium Nodes** is an Android application where users can earn credits by watching ads. The credits are intended to be used on the Hexium Nodes platform.
 - **Package Name:** `com.hexium.nodes`
 - **Minimum Android Version:** Android 7.0 (API 24)
 - **Target Android Version:** Android 15 (API 35)
 - **Architecture:** MVVM + Clean Architecture (Data, Domain, UI)
-- **Tech Stack:** Kotlin, Jetpack Compose, Hilt, Room, Retrofit.
+- **Tech Stack:** Kotlin (JDK 25), Jetpack Compose, Hilt, Room, Retrofit.
 
-## 2. Recent Progress & Current State
-### 2.1 Completed
-- **Workflow Optimization:**
-    - Removed redundant steps.
-    - Implemented fail-fast Lint check.
-    - Consolidate artifact uploads.
-- **UI Refactoring:**
-    - **Theme:** Fixed deprecated status bar warning; implemented Brand Colors fallback for non-Material You devices.
-    - **Splash Screen:** Replaced text with `CircularProgressIndicator`; implemented immediate auth check.
-    - **Login Screen:** Added Username/Password fields; improved UI.
-- **Developer Tools (Dev Flavor):**
-    - Added "Copy Logs" and "Save Logs" buttons in Settings.
-    - Implemented `LogUtils` to capture and filter app logs.
-- **Configuration:**
-    - Updated default Server URL to `https://placeholder.hexium.nodes`.
+## 2. Architecture & Modules
+The app follows **Modern Android Architecture** principles and is modularized:
+*   `:app`: The application entry point (DI Components).
+*   `:feature:home`: Home screen and Ad interaction logic.
+*   `:feature:auth`: Login and Splash screens.
+*   `:feature:settings`: Settings and Developer options.
+*   `:core:ui`: Shared UI components, Theme, and Resources.
+*   `:core:model`: Shared data models.
+*   `:core:common`: Shared utilities.
+*   `:data`: Repositories, Data Sources, and Networking.
 
-### 2.2 Pending Tasks
-- **Modularization:** Refactor the app into multiple modules (core, data, ui, app) to improve build times and separation of concerns.
+## 3. Server & Data Strategy
+### Current State (Mock/Dev)
+*   **Backend:** Mock mode where `MockAdRepository` simulates a backend.
+*   **Configuration:** Dynamic settings (Ad Limits, Maintenance Mode, Min Version, Test Users) are fetched from a static JSON file (`config.json`) hosted on **GitHub Pages**.
+*   **Auth:** Login validates against `testUsers` list in the fetched config.
+*   **Data Persistence:** User credits and ad history are stored locally using `SharedPreferences` (Double precision) and `DataStore`.
 
-## 3. Maintenance Guide
+### Future State (Production)
+*   **Auth:** Integration with Hexium Nodes existing authentication (or Firebase Auth).
+*   **Database:** A real backend (e.g., Firebase, Supabase, or Custom PHP/SQL) is required to securely store user credits.
+    *   *Note:* GitHub Pages cannot be used as a write-able database.
+*   **Security:**
+    *   **Server-Side Verification (SSV):** Ad rewards must be validated on the server via AdMob callbacks.
+    *   **Play Integrity:** The app sends an integrity token to the server to verify the request is coming from a genuine, unmodified app instance.
+
+## 4. Completed Progress
+### 4.1 Modularization & Quality
+- [x] **Modularization:** Split app into `:core`, `:data`, `:feature` modules.
+- [x] **Linting:** Enforced code style with **Spotless/Ktlint**.
+- [x] **Java 25:** Configured build to use `jvmToolchain(25)`.
+- [x] **Precision:** Switched financial data types to `Double` to fix precision errors.
+
+### 4.2 CI/CD & Config
+- [x] **CI Optimization:** Fail-fast Lint/Test steps, Artifact uploads.
+- [x] **GitHub Pages:** Workflow to manually publish `config/config.json`.
+- [x] **Remote Config:** App fetches config from Server URL (defaulting to GitHub Pages).
+
+### 4.3 UI/UX
+- [x] **Theme:** Material 3, Dynamic Colors, Dark/Light mode chips.
+- [x] **Settings:** Redesigned User Profile, Fixed Input Glitches.
+- [x] **Splash:** Instant launch feel, removed artificial delays, handled "Maintenance" and "Update Required" states.
+
+## 5. Maintenance Guide
 ### Building Locally
 1.  **Debug:** `./gradlew assembleDevDebug`
-2.  **Release:** `./gradlew assembleDevRelease` (Uses debug keystore fallback in dev flavor).
+2.  **Release:** `./gradlew assembleDevRelease` (Requires keystore or fallback).
 
-### Keystore Generation (For User)
-- Run in Termux to generate keys for GitHub Secrets:
-  ```bash
-  mkdir -p ~/storage/shared/HexiumNodes/Signature
-  keytool -genkey -v -keystore ~/storage/shared/HexiumNodes/Signature/hexium_release.jks \
-    -keyalg RSA -keysize 2048 -validity 10000 \
-    -alias hexium_key \
-    -dname "CN=Sin Exe, OU=App, O=Hexium Nodes, L=Palakkad, S=Kerala, C=IN" \
-    -storepass "YOUR_PASSWORD" -keypass "YOUR_PASSWORD"
-  base64 -w 0 ~/storage/shared/HexiumNodes/Signature/hexium_release.jks > ~/storage/shared/HexiumNodes/Signature/keystore_base64.txt
-  ```
-- Upload `KEYSTORE_BASE64`, `STORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD` to GitHub Secrets.
+### Quality
+- **Format:** `./gradlew spotlessApply`
+- **Lint:** `./gradlew lintDevDebug`
+- **Test:** `./gradlew testDevDebug`
 
-## 4. Future Roadmap
-- **Modularization**: Split into feature modules.
-- **Server Integration**: Switch from Mock to Real API (Auth, Ad Limits).
-- **Play Integrity**: Implement server-side verification of client tokens.
-- **Optimization**: Verify R8 shrinking efficiency.
+## 6. Future Roadmap (Remaining Tasks)
+- [ ] **Phase 2: Real API Integration:** Replace `MockAdRepository` with `NetworkAdRepository` connected to real Hexium Nodes API.
+- [ ] **Phase 3: Production Security:** Implement Play Integrity token generation and server-side verification.
+- [ ] **Phase 4: Release:** Proguard/R8 optimization checks and Play Store submission.

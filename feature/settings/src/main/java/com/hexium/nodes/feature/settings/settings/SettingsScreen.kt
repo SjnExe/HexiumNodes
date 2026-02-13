@@ -163,8 +163,8 @@ fun SettingsScreen(
                 var adLimit by remember { mutableStateOf(uiState.devAdLimit.toString()) }
                 var adRate by remember { mutableStateOf(uiState.devAdRate.toString()) }
                 var adExpiry by remember { mutableStateOf(uiState.devAdExpiry.toString()) }
+                var serverUrl by remember { mutableStateOf(uiState.serverUrl) }
 
-                // Sync with UI State only if values differ significantly to prevent typing interference
                 LaunchedEffect(uiState.devAdLimit) {
                     if (adLimit.toIntOrNull() != uiState.devAdLimit) {
                         adLimit = uiState.devAdLimit.toString()
@@ -180,6 +180,26 @@ fun SettingsScreen(
                         adExpiry = uiState.devAdExpiry.toString()
                     }
                 }
+                LaunchedEffect(uiState.serverUrl) {
+                    if (serverUrl != uiState.serverUrl) {
+                        serverUrl = uiState.serverUrl
+                    }
+                }
+
+                ListItem(
+                    headlineContent = { Text("Server URL") },
+                    trailingContent = {
+                        OutlinedTextField(
+                            value = serverUrl,
+                            onValueChange = {
+                                serverUrl = it
+                                viewModel.updateServerUrl(it)
+                            },
+                            modifier = Modifier.width(200.dp),
+                            singleLine = true,
+                        )
+                    },
+                )
 
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.ad_limit)) },

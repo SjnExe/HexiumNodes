@@ -6,6 +6,11 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.spotless)
+}
+
+kotlin {
+    jvmToolchain(25)
 }
 
 android {
@@ -86,11 +91,6 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
-    }
-
     buildFeatures {
         compose = true
         buildConfig = true
@@ -153,8 +153,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
-apply(plugin = "com.diffplug.spotless")
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin {

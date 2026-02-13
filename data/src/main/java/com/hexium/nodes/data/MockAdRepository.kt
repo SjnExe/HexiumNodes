@@ -12,6 +12,7 @@ import javax.inject.Singleton
 class MockAdRepository @Inject constructor(
     private val prefs: SharedPreferences,
     private val settingsRepository: SettingsRepository,
+    private val configRepository: ConfigRepository,
 ) : AdRepository {
 
     companion object {
@@ -85,12 +86,23 @@ class MockAdRepository @Inject constructor(
     }
 
     override suspend fun login(username: String, password: String): Boolean = withContext(Dispatchers.IO) {
-        // Mock validation
-        if ((username == "admin" || username == "admin@email.com") && password == "1234") {
+        // Fetch remote config for validation
+        val config = configRepository.fetchConfig()
+
+        // If config is null (network error), fallback to default fail (or local cache if implemented, but here fail safely)
+        if (config == null) {
+            return@withContext false
+        }
+
+        val validUser = config.testUsers.find {
+            (it.username == username || it.username == username /* Handle email logic if needed */) && it.password == password
+        }
+
+        if (validUser != null) {
             prefs.edit()
                 .putBoolean("is_logged_in", true)
-                .putString("username", "admin")
-                .putString("email", "admin@email.com")
+                .putString("username", validUser.username)
+                .putString("email", validUser.username) // Mock email as username
                 .apply()
             return@withContext true
         }
