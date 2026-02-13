@@ -45,6 +45,7 @@ class MockAdRepositoryTest {
             cachedAdLimit = 50,
             cachedAdRate = 1.0,
             cachedAdExpiry = 24,
+            cachedAdDelaySeconds = 10L,
         )
         whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
 

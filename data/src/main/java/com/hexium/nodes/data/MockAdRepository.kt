@@ -40,12 +40,29 @@ class MockAdRepository @Inject constructor(
         return@withContext settingsRepository.settingsFlow.first().cachedAdExpiry
     }
 
+    override suspend fun getAdWatchDelaySeconds(): Long = withContext(Dispatchers.IO) {
+        return@withContext settingsRepository.settingsFlow.first().cachedAdDelaySeconds
+    }
+
+    override suspend fun getNextAdAvailableTime(): Long = withContext(Dispatchers.IO) {
+        val lastWatch = prefs.getLong("last_ad_watch_time", 0L)
+        val delaySec = getAdWatchDelaySeconds()
+        return@withContext lastWatch + (delaySec * 1000L)
+    }
+
     override suspend fun getCredits(): Double = withContext(Dispatchers.IO) {
         val creditsStr = prefs.getString("credits_double", "0.00") ?: "0.00"
         return@withContext creditsStr.toDoubleOrNull() ?: 0.0
     }
 
     override suspend fun watchAd(): Boolean = withContext(Dispatchers.IO) {
+        // Enforce Delay
+        val now = System.currentTimeMillis()
+        val nextAvailable = getNextAdAvailableTime()
+        if (now < nextAvailable) {
+            return@withContext false // Too soon
+        }
+
         val maxAds = getMaxAds()
         cleanUpExpiredAds()
         val history = getHistoryInternal().toMutableSet()
@@ -65,9 +82,11 @@ class MockAdRepository @Inject constructor(
         }
 
         // Add current timestamp
-        val now = System.currentTimeMillis()
         history.add(now.toString())
-        prefs.edit().putStringSet("ad_history", history).apply()
+        prefs.edit()
+            .putStringSet("ad_history", history)
+            .putLong("last_ad_watch_time", now) // Update last watch time
+            .apply()
 
         // Increment credits
         val newCredits = currentCredits + reward
