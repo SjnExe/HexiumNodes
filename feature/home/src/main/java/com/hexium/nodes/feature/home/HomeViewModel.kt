@@ -1,8 +1,10 @@
 package com.hexium.nodes.feature.home
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hexium.nodes.data.AdRepository
+import com.hexium.nodes.feature.home.ads.RewardedAdManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +15,7 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val repository: AdRepository,
+    private val adManager: RewardedAdManager,
 ) : ViewModel() {
 
     private val _credits = MutableStateFlow(0.00)
@@ -42,8 +45,11 @@ class HomeViewModel @Inject constructor(
     private val _loginError = MutableStateFlow<String?>(null)
     val loginError: StateFlow<String?> = _loginError.asStateFlow()
 
+    val isAdLoaded: StateFlow<Boolean> = adManager.isAdLoaded
+
     init {
         checkLoginState()
+        adManager.loadAd()
     }
 
     private fun checkLoginState() {
@@ -91,11 +97,14 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun watchAd() {
-        viewModelScope.launch {
-            val success = repository.watchAd()
-            if (success) {
-                refreshData()
+    fun watchAd(activity: Activity) {
+        adManager.showAd(activity) { _ ->
+            // User earned reward
+            viewModelScope.launch {
+                val success = repository.watchAd()
+                if (success) {
+                    refreshData()
+                }
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.hexium.nodes.feature.home
 
+import android.app.Activity
 import android.text.format.DateUtils
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -10,10 +11,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.core.ui.R
+import com.hexium.nodes.feature.home.ads.BannerAd
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -32,6 +36,10 @@ fun HomeScreen(
     val username by viewModel.username.collectAsState()
     val adRate by viewModel.adRate.collectAsState()
     val adExpiryHours by viewModel.adExpiryHours.collectAsState()
+    val isAdLoaded by viewModel.isAdLoaded.collectAsState()
+
+    val context = LocalContext.current
+    val activity = context as? Activity
 
     // Initial load
     LaunchedEffect(Unit) {
@@ -104,14 +112,37 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            var isClickable by remember { mutableStateOf(true) }
+
             Button(
-                onClick = { viewModel.watchAd() },
-                enabled = availableAds > 0,
+                onClick = {
+                    if (isClickable) {
+                        isClickable = false
+                        activity?.let { viewModel.watchAd(it) }
+                    }
+                },
+                enabled = availableAds > 0 && isAdLoaded && isClickable,
                 modifier = Modifier.fillMaxWidth().height(56.dp),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(stringResource(R.string.watch_ad))
-                    Text(stringResource(R.string.earn_credits, adRate.toString()), style = MaterialTheme.typography.labelSmall)
+                    if (isAdLoaded) {
+                        Text(stringResource(R.string.watch_ad))
+                        Text(stringResource(R.string.earn_credits, adRate.toString()), style = MaterialTheme.typography.labelSmall)
+                    } else {
+                        Text("Loading Ad...")
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(16.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                    }
+                }
+            }
+
+            LaunchedEffect(isClickable) {
+                if (!isClickable) {
+                    delay(2000) // Debounce 2 seconds
+                    isClickable = true
                 }
             }
 
@@ -145,24 +176,20 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Banner Ad Placeholder
+            // Banner Ad
             Card(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp),
+                    .fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceVariant,
                 ),
                 shape = MaterialTheme.shapes.small,
             ) {
                 Box(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = stringResource(R.string.banner_ad_placeholder),
-                        style = MaterialTheme.typography.labelSmall,
-                    )
+                    BannerAd()
                 }
             }
         }
