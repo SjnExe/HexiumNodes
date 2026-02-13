@@ -89,12 +89,13 @@ class MockAdRepository @Inject constructor(
         // Fetch remote config for validation
         val config = configRepository.fetchConfig()
 
-        // If config is null (network error), fallback to default fail
-        if (config == null) {
-            return@withContext false
-        }
+        // Fallback to hardcoded users if fetch fails or for local dev convenience
+        val testUsers = config?.testUsers ?: listOf(
+            com.hexium.nodes.data.model.TestUser("testuser", "password123"),
+            com.hexium.nodes.data.model.TestUser("admin", "1234")
+        )
 
-        val validUser = config.testUsers.find {
+        val validUser = testUsers.find {
             (it.username == username) && it.password == password
         }
 
