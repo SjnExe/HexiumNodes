@@ -160,11 +160,6 @@ fun SettingsScreen(
             ListItem(headlineContent = { Text("App Configuration (Server)", color = MaterialTheme.colorScheme.primary) })
 
             ListItem(
-                headlineContent = { Text("Server URL") },
-                supportingContent = { Text(uiState.serverUrl) },
-            )
-
-            ListItem(
                 headlineContent = { Text(stringResource(R.string.ad_limit)) },
                 trailingContent = { Text(uiState.cachedAdLimit.toString()) },
             )

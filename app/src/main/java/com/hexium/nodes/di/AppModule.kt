@@ -2,6 +2,7 @@ package com.hexium.nodes.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.chuckerteam.chucker.api.ChuckerInterceptor
 import com.hexium.nodes.data.AdRepository
 import com.hexium.nodes.data.MockAdRepository
 import dagger.Binds
@@ -10,6 +11,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module
@@ -29,6 +31,14 @@ abstract class AppModule {
             @ApplicationContext context: Context,
         ): SharedPreferences {
             return context.getSharedPreferences("hexium_prefs", Context.MODE_PRIVATE)
+        }
+
+        @Provides
+        @Singleton
+        fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
+            return OkHttpClient.Builder()
+                .addInterceptor(ChuckerInterceptor.Builder(context).build())
+                .build()
         }
     }
 }

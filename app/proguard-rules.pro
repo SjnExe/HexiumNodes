@@ -17,3 +17,6 @@
 
 # Room
 -keep class androidx.room.RoomDatabase
+
+# Keep Data Models for Gson Serialization/Deserialization
+-keep class com.hexium.nodes.data.model.** { *; }

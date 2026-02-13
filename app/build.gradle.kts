@@ -138,10 +138,8 @@ dependencies {
     implementation(libs.play.services.ads)
 
     // Debugging (Dev only)
-    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
-    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
-
-    // Testing
+    "devImplementation"("com.github.chuckerteam.chucker:library:4.0.0")
+    "stableImplementation"("com.github.chuckerteam.chucker:library-no-op:4.0.0")
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.core)

@@ -61,6 +61,6 @@ dependencies {
     implementation(libs.androidx.hilt.navigation.compose)
 
     // Debugging (Dev only)
-    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
-    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+    "devImplementation"("com.github.chuckerteam.chucker:library:4.0.0")
+    "stableImplementation"("com.github.chuckerteam.chucker:library-no-op:4.0.0")
 }
