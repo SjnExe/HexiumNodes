@@ -1,69 +1,25 @@
-# Hexium Nodes - Project Plan & Roadmap
+# Remaining Tasks for AdMob Integration Fixes
 
-## 1. Project Overview
-**Hexium Nodes** is an Android application where users can earn credits by watching ads. The credits are intended to be used on the Hexium Nodes platform.
-- **Package Name:** `com.hexium.nodes`
-- **Minimum Android Version:** Android 7.0 (API 24)
-- **Target Android Version:** Android 16 (API 36)
-- **Architecture:** MVVM + Clean Architecture (Data, Domain, UI)
-- **Tech Stack:** Kotlin (JDK 25), Jetpack Compose, Hilt, Room, Retrofit.
+The current session successfully implemented the core AdMob fixes (Orientation logic, Background safety, Config updates) but encountered build issues during verification.
 
-## 2. Architecture & Modules
-The app follows **Modern Android Architecture** principles and is modularized:
-*   `:app`: The application entry point (DI Components).
-*   `:feature:home`: Home screen and Ad interaction logic.
-*   `:feature:auth`: Login and Splash screens.
-*   `:feature:settings`: Settings and Developer options.
-*   `:core:ui`: Shared UI components, Theme, and Resources.
-*   `:core:model`: Shared data models.
-*   `:core:common`: Shared utilities.
-*   `:data`: Repositories, Data Sources, and Networking.
+## 1. Fix Build Configuration (Java 25)
+- **Issue:** `Execution failed for task ':app:hiltJavaCompileDevDebug'. > Java compilation initialization error: invalid source release: 25`.
+- **Cause:** The Hilt/Java compiler task isn't picking up the Java 25 toolchain correctly, or `compileOptions` is missing/misconfigured.
+- **Action:**
+    - Verify `app/build.gradle.kts` has `compileOptions`.
+    - Try explicitly setting `sourceCompatibility` and `targetCompatibility` to `JavaVersion.toVersion(25)` (or string "25").
+    - Ensure `AGENTS.md` instructions for environment setup (JDK 25) are valid for the Gradle version.
 
-## 3. Server & Data Strategy
-### Current State (Mock/Dev)
-*   **Backend:** Mock mode where `MockAdRepository` simulates a backend.
-*   **Configuration:** Dynamic settings (Ad Limits, Maintenance Mode, Min Version, Test Users) are fetched from a static JSON file (`config.json`) hosted on **GitHub Pages**.
-*   **Auth:** Login validates against `testUsers` list in the fetched config.
-*   **Data Persistence:** User credits and ad history are stored locally using `SharedPreferences` (Double precision) and `DataStore`.
+## 2. Fix Lint Warnings
+- **String Format:**
+    - **File:** `core/ui/src/main/res/values/strings.xml`
+    - **Issue:** `daily_ad_limit` uses `%d` multiple times without positional args.
+    - **Fix:** Change to `Daily Ad Limit: %1$d / %2$d`.
+- **Annotation Ambiguity:**
+    - **File:** `feature/home/src/main/java/com/hexium/nodes/feature/home/ads/RewardedAdManager.kt`
+    - **Issue:** `@Inject constructor(@ApplicationContext ...)` triggers a Kotlin warning.
+    - **Fix:** Use `@param:ApplicationContext` or `@Inject constructor(...)` with `-Xannotation-default-target=param-property`.
 
-### Future State (Production)
-*   **Auth:** Integration with Hexium Nodes existing authentication (or Firebase Auth).
-*   **Database:** A real backend (e.g., Firebase, Supabase, or Custom PHP/SQL) is required to securely store user credits.
-    *   *Note:* GitHub Pages cannot be used as a write-able database.
-*   **Security:**
-    *   **Server-Side Verification (SSV):** Ad rewards must be validated on the server via AdMob callbacks.
-    *   **Play Integrity:** The app sends an integrity token to the server to verify the request is coming from a genuine, unmodified app instance.
-
-## 4. Completed Progress
-### 4.1 Modularization & Quality
-- [x] **Modularization:** Split app into `:core`, `:data`, `:feature` modules.
-- [x] **Linting:** Enforced code style with **Spotless/Ktlint**.
-- [x] **Java 25:** Configured build to use `jvmToolchain(25)`.
-- [x] **Precision:** Switched financial data types to `Double` to fix precision errors.
-
-### 4.2 CI/CD & Config
-- [x] **CI Optimization:** Fail-fast Lint/Test steps, Artifact uploads.
-- [x] **GitHub Pages:** Workflow to manually publish `config/config.json`.
-- [x] **Remote Config:** App fetches config from Server URL (defaulting to GitHub Pages).
-- [x] **Versioning:** Fixed off-by-one error in PR version string.
-
-### 4.3 UI/UX
-- [x] **Theme:** Material 3, Dynamic Colors, Dark/Light mode chips.
-- [x] **Settings:** Redesigned User Profile, Fixed Input Glitches.
-- [x] **Splash:** Instant launch feel, removed artificial delays, handled "Maintenance" and "Update Required" states.
-- [x] **Network Inspector:** Configured Chucker for Dev builds (Debug & Release) and handled launch errors.
-
-## 5. Maintenance Guide
-### Building Locally
-1.  **Debug:** `./gradlew assembleDevDebug`
-2.  **Release:** `./gradlew assembleDevRelease` (Requires keystore or fallback).
-
-### Quality
-- **Format:** `./gradlew spotlessApply`
-- **Lint:** `./gradlew lintDevDebug`
-- **Test:** `./gradlew testDevDebug`
-
-## 6. Future Roadmap (Remaining Tasks)
-- [ ] **Phase 2: Real API Integration:** Replace `MockAdRepository` with `NetworkAdRepository` connected to real Hexium Nodes API.
-- [ ] **Phase 3: Production Security:** Implement Play Integrity token generation and server-side verification.
-- [ ] **Phase 4: Release:** Proguard/R8 optimization checks and Play Store submission.
+## 3. Verify Fixes
+- Run `./gradlew lintDevDebug testDevDebug` to ensure a clean build.
+- Confirm "App Open" ads load correctly (no "Format Mismatch") and background network usage is zero.
