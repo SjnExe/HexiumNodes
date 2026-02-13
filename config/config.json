@@ -1,7 +1,13 @@
 {
-  "devAdLimit": 50,
-  "devAdRate": 1.0,
-  "devAdExpiry": 24,
+  "devAdLimit": 100,
+  "devAdRate": 0.50,
+  "devAdExpiry": 12,
   "maintenance": false,
-  "minVersion": 1
+  "minVersion": 1,
+  "testUsers": [
+    {
+      "username": "testuser",
+      "password": "password123"
+    }
+  ]
 }

@@ -42,9 +42,9 @@ class MockAdRepositoryTest {
             themeMode = AppTheme.SYSTEM,
             useDynamicColors = false,
             serverUrl = "http://test",
-            devAdLimit = 50,
-            devAdRate = 1.0,
-            devAdExpiry = 24,
+            cachedAdLimit = 50,
+            cachedAdRate = 1.0,
+            cachedAdExpiry = 24,
         )
         whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
 

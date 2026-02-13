@@ -27,9 +27,9 @@ class SettingsViewModel @Inject constructor(
                     themeMode = settings.themeMode,
                     useDynamicColors = settings.useDynamicColors,
                     serverUrl = settings.serverUrl,
-                    devAdLimit = settings.devAdLimit,
-                    devAdRate = settings.devAdRate,
-                    devAdExpiry = settings.devAdExpiry,
+                    cachedAdLimit = settings.cachedAdLimit,
+                    cachedAdRate = settings.cachedAdRate,
+                    cachedAdExpiry = settings.cachedAdExpiry,
                 )
             }
         }
@@ -55,21 +55,7 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setDynamicColors(useDynamic) }
     }
 
-    fun updateServerUrl(url: String) {
-        viewModelScope.launch { settingsRepository.setServerUrl(url) }
-    }
-
-    fun updateDevAdLimit(limit: Int) {
-        viewModelScope.launch { settingsRepository.setDevAdLimit(limit) }
-    }
-
-    fun updateDevAdRate(rate: Double) {
-        viewModelScope.launch { settingsRepository.setDevAdRate(rate) }
-    }
-
-    fun updateDevAdExpiry(hours: Int) {
-        viewModelScope.launch { settingsRepository.setDevAdExpiry(hours) }
-    }
+    // Removed update methods for server configs as they are now read-only/cached
 
     fun logout() {
         viewModelScope.launch {
@@ -82,11 +68,11 @@ class SettingsViewModel @Inject constructor(
 data class SettingsUiState(
     val themeMode: AppTheme = AppTheme.SYSTEM,
     val useDynamicColors: Boolean = false,
-    val serverUrl: String = "https://placeholder.hexium.nodes",
+    val serverUrl: String = "https://SjnExe.github.io/HexiumNodes",
     val isLoggedIn: Boolean = false,
     val username: String? = null,
     val email: String? = null,
-    val devAdLimit: Int = 50,
-    val devAdRate: Double = 1.0,
-    val devAdExpiry: Int = 24,
+    val cachedAdLimit: Int = 50,
+    val cachedAdRate: Double = 1.0,
+    val cachedAdExpiry: Int = 24,
 )

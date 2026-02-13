@@ -29,10 +29,14 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
     companion object {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val DYNAMIC_COLORS = booleanPreferencesKey("dynamic_colors")
+        // Read-only server URL, not exposed as setting anymore unless strictly needed for debug overrides?
+        // But we will store it to support future changes if we want.
         val SERVER_URL = stringPreferencesKey("server_url")
-        val DEV_AD_LIMIT = intPreferencesKey("dev_ad_limit")
-        val DEV_AD_RATE_STRING = stringPreferencesKey("dev_ad_rate_str") // Store as string for Double precision
-        val DEV_AD_EXPIRY = intPreferencesKey("dev_ad_expiry")
+
+        // These are now "Cached" values from the server
+        val CACHED_AD_LIMIT = intPreferencesKey("cached_ad_limit")
+        val CACHED_AD_RATE_STRING = stringPreferencesKey("cached_ad_rate_str")
+        val CACHED_AD_EXPIRY = intPreferencesKey("cached_ad_expiry")
     }
 
     val settingsFlow: Flow<SettingsData> = dataStore.data.map { preferences ->
@@ -43,16 +47,16 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             AppTheme.SYSTEM
         }
 
-        val rateStr = preferences[DEV_AD_RATE_STRING] ?: "1.0"
+        val rateStr = preferences[CACHED_AD_RATE_STRING] ?: "1.0"
         val rate = rateStr.toDoubleOrNull() ?: 1.0
 
         SettingsData(
             themeMode = themeMode,
             useDynamicColors = preferences[DYNAMIC_COLORS] ?: false,
             serverUrl = preferences[SERVER_URL] ?: "https://SjnExe.github.io/HexiumNodes",
-            devAdLimit = preferences[DEV_AD_LIMIT] ?: 50,
-            devAdRate = rate,
-            devAdExpiry = preferences[DEV_AD_EXPIRY] ?: 24,
+            cachedAdLimit = preferences[CACHED_AD_LIMIT] ?: 50,
+            cachedAdRate = rate,
+            cachedAdExpiry = preferences[CACHED_AD_EXPIRY] ?: 24,
         )
     }
 
@@ -64,20 +68,18 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         dataStore.edit { it[DYNAMIC_COLORS] = useDynamic }
     }
 
+    // Only used for internal overrides or init
     suspend fun setServerUrl(url: String) {
         dataStore.edit { it[SERVER_URL] = url }
     }
 
-    suspend fun setDevAdLimit(limit: Int) {
-        dataStore.edit { it[DEV_AD_LIMIT] = limit }
-    }
-
-    suspend fun setDevAdRate(rate: Double) {
-        dataStore.edit { it[DEV_AD_RATE_STRING] = rate.toString() }
-    }
-
-    suspend fun setDevAdExpiry(hours: Int) {
-        dataStore.edit { it[DEV_AD_EXPIRY] = hours }
+    // New method to batch update from remote config
+    suspend fun updateFromRemoteConfig(limit: Int, rate: Double, expiry: Int) {
+        dataStore.edit {
+            it[CACHED_AD_LIMIT] = limit
+            it[CACHED_AD_RATE_STRING] = rate.toString()
+            it[CACHED_AD_EXPIRY] = expiry
+        }
     }
 }
 
@@ -85,7 +87,7 @@ data class SettingsData(
     val themeMode: AppTheme,
     val useDynamicColors: Boolean,
     val serverUrl: String,
-    val devAdLimit: Int,
-    val devAdRate: Double,
-    val devAdExpiry: Int,
+    val cachedAdLimit: Int,
+    val cachedAdRate: Double,
+    val cachedAdExpiry: Int,
 )

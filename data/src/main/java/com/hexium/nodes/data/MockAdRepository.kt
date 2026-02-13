@@ -29,15 +29,15 @@ class MockAdRepository @Inject constructor(
     }
 
     override suspend fun getMaxAds(): Int = withContext(Dispatchers.IO) {
-        return@withContext settingsRepository.settingsFlow.first().devAdLimit
+        return@withContext settingsRepository.settingsFlow.first().cachedAdLimit
     }
 
     override suspend fun getAdRewardRate(): Double = withContext(Dispatchers.IO) {
-        return@withContext settingsRepository.settingsFlow.first().devAdRate
+        return@withContext settingsRepository.settingsFlow.first().cachedAdRate
     }
 
     override suspend fun getAdExpiryHours(): Int = withContext(Dispatchers.IO) {
-        return@withContext settingsRepository.settingsFlow.first().devAdExpiry
+        return@withContext settingsRepository.settingsFlow.first().cachedAdExpiry
     }
 
     override suspend fun getCredits(): Double = withContext(Dispatchers.IO) {
@@ -89,13 +89,13 @@ class MockAdRepository @Inject constructor(
         // Fetch remote config for validation
         val config = configRepository.fetchConfig()
 
-        // If config is null (network error), fallback to default fail (or local cache if implemented, but here fail safely)
+        // If config is null (network error), fallback to default fail
         if (config == null) {
             return@withContext false
         }
 
         val validUser = config.testUsers.find {
-            (it.username == username || it.username == username /* Handle email logic if needed */) && it.password == password
+            (it.username == username) && it.password == password
         }
 
         if (validUser != null) {
@@ -132,7 +132,7 @@ class MockAdRepository @Inject constructor(
     private suspend fun cleanUpExpiredAds() {
         val history = getHistoryInternal()
         val now = System.currentTimeMillis()
-        val expiryHours = settingsRepository.settingsFlow.first().devAdExpiry
+        val expiryHours = getAdExpiryHours()
         val expiryMs = expiryHours * 60 * 60 * 1000L
 
         val validAds = history.filter {

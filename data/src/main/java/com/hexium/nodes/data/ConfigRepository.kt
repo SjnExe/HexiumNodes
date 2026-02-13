@@ -24,7 +24,16 @@ class ConfigRepository @Inject constructor(
         }
 
         return try {
-            configService.getConfig(fullUrl)
+            val config = configService.getConfig(fullUrl)
+
+            // Cache the critical values immediately
+            settingsRepository.updateFromRemoteConfig(
+                limit = config.devAdLimit,
+                rate = config.devAdRate,
+                expiry = config.devAdExpiry
+            )
+
+            config
         } catch (e: Exception) {
             e.printStackTrace()
             null

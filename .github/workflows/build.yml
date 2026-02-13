@@ -32,7 +32,9 @@ jobs:
           # Get latest stable tag (e.g. v1.4.6 -> 1.4.6) or default to 0.0.0
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           VERSION_BASE=${LATEST_TAG#v}
-          COMMIT_COUNT=$(git rev-list --count HEAD)
+          # Subtract 1 from commit count as per user request to fix off-by-one error
+          RAW_COUNT=$(git rev-list --count HEAD)
+          COMMIT_COUNT=$((RAW_COUNT - 1))
 
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             # Stable Release from Tag (e.g. 1.4.6)
