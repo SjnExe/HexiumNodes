@@ -156,6 +156,9 @@ jobs:
 
           echo "=== END SUMMARY ===" >> $SUMMARY_FILE
 
+          # Also output to GitHub Job Summary
+          cat $SUMMARY_FILE >> $GITHUB_STEP_SUMMARY
+
       - name: Upload Summary Log
         if: always()
         uses: actions/upload-artifact@v6
@@ -173,6 +176,13 @@ jobs:
             **/build/reports/tests/**/index.html
             build_dev.log
             build_stable.log
+
+      - name: Upload Mapping File (Dev)
+        if: steps.version.outputs.IS_STABLE == 'false'
+        uses: actions/upload-artifact@v6
+        with:
+          name: mapping-dev-${{ steps.version.outputs.VERSION_NAME }}
+          path: app/build/outputs/mapping/devRelease/mapping.txt
 
       - name: Upload APKs (Dev)
         if: steps.version.outputs.IS_STABLE == 'false'
