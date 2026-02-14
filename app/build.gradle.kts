@@ -6,6 +6,11 @@ plugins {
     alias(libs.plugins.google.devtools.ksp)
     alias(libs.plugins.hilt.android)
     alias(libs.plugins.compose.compiler)
+    alias(libs.plugins.spotless)
+}
+
+kotlin {
+    jvmToolchain(25)
 }
 
 android {
@@ -48,6 +53,11 @@ android {
         minSdk = 24
         targetSdk = 36
 
+        compileOptions {
+            sourceCompatibility = JavaVersion.VERSION_25
+            targetCompatibility = JavaVersion.VERSION_25
+        }
+
         val versionCodeParam = project.findProperty("versionCode") as? String
         val versionNameParam = project.findProperty("versionName") as? String
 
@@ -86,9 +96,16 @@ android {
         }
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+    // Strip unused resources. We currently only support English.
+    // In the future, add other language codes here (e.g., "es", "fr") as needed.
+    androidResources {
+        localeFilters += "en"
+    }
+
+    lint {
+        // Skip lint check during release builds to speed up CI.
+        // We explicitly run 'lintDevDebug' in the CI pipeline, so this is redundant.
+        checkReleaseBuilds = false
     }
 
     buildFeatures {
@@ -120,6 +137,7 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -138,10 +156,9 @@ dependencies {
     implementation(libs.play.services.ads)
 
     // Debugging (Dev only)
-    debugImplementation("com.github.chuckerteam.chucker:library:4.0.0")
-    releaseImplementation("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+    "devImplementation"(libs.chucker.library)
+    "stableImplementation"(libs.chucker.library.no.op)
 
-    // Testing
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.core)
@@ -153,8 +170,6 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 }
-
-apply(plugin = "com.diffplug.spotless")
 
 configure<com.diffplug.gradle.spotless.SpotlessExtension> {
     kotlin {

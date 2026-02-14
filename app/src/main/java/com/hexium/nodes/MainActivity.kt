@@ -18,8 +18,8 @@ import com.hexium.nodes.feature.auth.login.LoginScreen
 import com.hexium.nodes.feature.auth.splash.SplashScreen
 import com.hexium.nodes.feature.home.HomeScreen
 import com.hexium.nodes.feature.home.HomeViewModel
-import com.hexium.nodes.feature.settings.settings.SettingsScreen
 import com.hexium.nodes.feature.settings.SettingsViewModel
+import com.hexium.nodes.feature.settings.settings.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -55,6 +55,9 @@ class MainActivity : ComponentActivity() {
                                     navController.navigate("home") {
                                         popUpTo("splash") { inclusive = true }
                                     }
+                                },
+                                onNavigateToSettings = {
+                                    navController.navigate("settings")
                                 },
                             )
                         }

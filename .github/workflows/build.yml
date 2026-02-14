@@ -32,7 +32,9 @@ jobs:
           # Get latest stable tag (e.g. v1.4.6 -> 1.4.6) or default to 0.0.0
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
           VERSION_BASE=${LATEST_TAG#v}
-          COMMIT_COUNT=$(git rev-list --count HEAD)
+          # Subtract 1 from commit count as per user request to fix off-by-one error
+          RAW_COUNT=$(git rev-list --count HEAD)
+          COMMIT_COUNT=$((RAW_COUNT - 1))
 
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             # Stable Release from Tag (e.g. 1.4.6)
@@ -43,7 +45,9 @@ jobs:
           elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
             # PR Dev Build (e.g. 1.4.6-dev-PR9.34)
             PR_NUMBER=${{ github.event.pull_request.number }}
-            PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+            RAW_PR_COMMITS=$(git rev-list --count origin/${{ github.base_ref }}..HEAD)
+            PR_COMMITS=$((RAW_PR_COMMITS - 1))
+            if [ $PR_COMMITS -lt 0 ]; then PR_COMMITS=0; fi
             VERSION_NAME="${VERSION_BASE}-dev-PR${PR_NUMBER}.${PR_COMMITS}"
             VERSION_CODE=$COMMIT_COUNT
             IS_STABLE=false
@@ -66,7 +70,12 @@ jobs:
         with:
           java-version: '25'
           distribution: 'temurin'
-          cache: gradle
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          cache-disabled: false
+          cache-read-only: false
 
       - name: Decode Keystore
         env:
@@ -85,15 +94,7 @@ jobs:
             echo "Using generated debug.keystore for signing."
           fi
 
-      - name: Run Lint and Tests
-        env:
-          VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
-          VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
-        run: |
-          set -o pipefail
-          ./gradlew lintDevDebug testDevDebug 2>&1 | tee lint_test.log
-
-      - name: Build App
+      - name: Build and Verify
         id: build
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -106,25 +107,16 @@ jobs:
           set -o pipefail
 
           if [ "$IS_STABLE" == "true" ]; then
-            # Build Stable Release (AAB & APK)
-            ./gradlew bundleStableRelease assembleStableRelease \
+            # Build Stable Release (AAB & APK) + Lint/Test
+            ./gradlew lintDevDebug testDevDebug bundleStableRelease assembleStableRelease \
               -PversionCode=$VERSION_CODE \
               -PversionName="$VERSION_NAME" 2>&1 | tee build_stable.log
           else
-            # Build Dev Flavor (Release & Debug APKs)
+            # Build Dev Flavor (Release & Debug APKs) + Lint/Test
             # We build Release to test minification, and Debug for debugging features
-            ./gradlew assembleDevRelease assembleDevDebug \
+            ./gradlew lintDevDebug testDevDebug assembleDevRelease assembleDevDebug \
               -PversionCode=$VERSION_CODE \
               -PversionName="$VERSION_NAME" 2>&1 | tee build_dev.log
-
-            # Rename artifacts to generic names for easier upload/release
-            # Ensure output directories exist first to avoid errors
-            mkdir -p app/build/outputs/apk/dev/release
-            mkdir -p app/build/outputs/apk/dev/debug
-
-            # Use find to locate and move, ignoring if file is already named correctly
-            find app/build/outputs/apk/dev/release -name "*.apk" ! -name "app-dev-release.apk" -exec mv {} app/build/outputs/apk/dev/release/app-dev-release.apk \;
-            find app/build/outputs/apk/dev/debug -name "*.apk" ! -name "app-dev-debug.apk" -exec mv {} app/build/outputs/apk/dev/debug/app-dev-debug.apk \;
           fi
 
       - name: Generate Summary Log
@@ -150,11 +142,13 @@ jobs:
             fi
           }
 
-          extract_errors "lint_test.log"
           extract_errors "build_stable.log"
           extract_errors "build_dev.log"
 
           echo "=== END SUMMARY ===" >> $SUMMARY_FILE
+
+          # Also output to GitHub Job Summary
+          cat $SUMMARY_FILE >> $GITHUB_STEP_SUMMARY
 
       - name: Upload Summary Log
         if: always()
@@ -162,6 +156,7 @@ jobs:
         with:
           name: build-summary
           path: build_summary.txt
+          compression-level: 0
 
       - name: Upload Lint & Test Results
         if: always()
@@ -171,7 +166,17 @@ jobs:
           path: |
             **/build/reports/lint-results-*.html
             **/build/reports/tests/**/index.html
-            lint_test.log
+            build_dev.log
+            build_stable.log
+          compression-level: 0
+
+      - name: Upload Mapping File (Dev)
+        if: steps.version.outputs.IS_STABLE == 'false'
+        uses: actions/upload-artifact@v6
+        with:
+          name: mapping-dev-${{ steps.version.outputs.VERSION_NAME }}
+          path: app/build/outputs/mapping/devRelease/mapping.txt
+          compression-level: 0
 
       - name: Upload APKs (Dev)
         if: steps.version.outputs.IS_STABLE == 'false'
@@ -179,8 +184,9 @@ jobs:
         with:
           name: app-dev-${{ steps.version.outputs.VERSION_NAME }}
           path: |
-            app/build/outputs/apk/dev/release/app-dev-release.apk
-            app/build/outputs/apk/dev/debug/app-dev-debug.apk
+            app/build/outputs/apk/dev/release/*.apk
+            app/build/outputs/apk/dev/debug/*.apk
+          compression-level: 0
 
       - name: Upload Bundle & APK (Stable)
         if: steps.version.outputs.IS_STABLE == 'true'
@@ -190,6 +196,7 @@ jobs:
           path: |
             app/build/outputs/bundle/stableRelease/*.aab
             app/build/outputs/apk/stable/release/*.apk
+          compression-level: 0
 
       - name: Create/Update Dev Release
         if: steps.version.outputs.IS_STABLE == 'false'
@@ -200,11 +207,15 @@ jobs:
           # Delete existing 'dev' tag and release to keep it floating
           gh release delete dev --cleanup-tag -y || true
 
+          # Find APK paths dynamically
+          APK_RELEASE=$(find app/build/outputs/apk/dev/release -name "*.apk" | head -n 1)
+          APK_DEBUG=$(find app/build/outputs/apk/dev/debug -name "*.apk" | head -n 1)
+
           # Create new Dev Release
           # Use "dev" as tag name, but title includes version
           gh release create dev \
-            app/build/outputs/apk/dev/release/app-dev-release.apk \
-            app/build/outputs/apk/dev/debug/app-dev-debug.apk \
+            "$APK_RELEASE" \
+            "$APK_DEBUG" \
             --title "Development Build $VERSION_NAME" \
             --notes "Development build triggered by ${{ github.event_name }}. Version: $VERSION_NAME" \
             --prerelease \

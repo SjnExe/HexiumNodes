@@ -12,6 +12,7 @@ import javax.inject.Singleton
 class MockAdRepository @Inject constructor(
     private val prefs: SharedPreferences,
     private val settingsRepository: SettingsRepository,
+    private val configRepository: ConfigRepository,
 ) : AdRepository {
 
     companion object {
@@ -28,15 +29,25 @@ class MockAdRepository @Inject constructor(
     }
 
     override suspend fun getMaxAds(): Int = withContext(Dispatchers.IO) {
-        return@withContext settingsRepository.settingsFlow.first().devAdLimit
+        return@withContext settingsRepository.settingsFlow.first().cachedAdLimit
     }
 
     override suspend fun getAdRewardRate(): Double = withContext(Dispatchers.IO) {
-        return@withContext settingsRepository.settingsFlow.first().devAdRate
+        return@withContext settingsRepository.settingsFlow.first().cachedAdRate
     }
 
     override suspend fun getAdExpiryHours(): Int = withContext(Dispatchers.IO) {
-        return@withContext settingsRepository.settingsFlow.first().devAdExpiry
+        return@withContext settingsRepository.settingsFlow.first().cachedAdExpiry
+    }
+
+    override suspend fun getAdWatchDelaySeconds(): Long = withContext(Dispatchers.IO) {
+        return@withContext settingsRepository.settingsFlow.first().cachedAdDelaySeconds
+    }
+
+    override suspend fun getNextAdAvailableTime(): Long = withContext(Dispatchers.IO) {
+        val lastWatch = prefs.getLong("last_ad_watch_time", 0L)
+        val delaySec = getAdWatchDelaySeconds()
+        return@withContext lastWatch + (delaySec * 1000L)
     }
 
     override suspend fun getCredits(): Double = withContext(Dispatchers.IO) {
@@ -45,6 +56,13 @@ class MockAdRepository @Inject constructor(
     }
 
     override suspend fun watchAd(): Boolean = withContext(Dispatchers.IO) {
+        // Enforce Delay
+        val now = System.currentTimeMillis()
+        val nextAvailable = getNextAdAvailableTime()
+        if (now < nextAvailable) {
+            return@withContext false // Too soon
+        }
+
         val maxAds = getMaxAds()
         cleanUpExpiredAds()
         val history = getHistoryInternal().toMutableSet()
@@ -64,9 +82,11 @@ class MockAdRepository @Inject constructor(
         }
 
         // Add current timestamp
-        val now = System.currentTimeMillis()
         history.add(now.toString())
-        prefs.edit().putStringSet("ad_history", history).apply()
+        prefs.edit()
+            .putStringSet("ad_history", history)
+            .putLong("last_ad_watch_time", now) // Update last watch time
+            .apply()
 
         // Increment credits
         val newCredits = currentCredits + reward
@@ -85,12 +105,24 @@ class MockAdRepository @Inject constructor(
     }
 
     override suspend fun login(username: String, password: String): Boolean = withContext(Dispatchers.IO) {
-        // Mock validation
-        if ((username == "admin" || username == "admin@email.com") && password == "1234") {
+        // Fetch remote config for validation
+        val config = configRepository.fetchConfig()
+
+        // Fallback to hardcoded users if fetch fails or for local dev convenience
+        val testUsers = config?.testUsers ?: listOf(
+            com.hexium.nodes.data.model.TestUser("testuser", "password123"),
+            com.hexium.nodes.data.model.TestUser("admin", "1234"),
+        )
+
+        val validUser = testUsers.find {
+            (it.username == username) && it.password == password
+        }
+
+        if (validUser != null) {
             prefs.edit()
                 .putBoolean("is_logged_in", true)
-                .putString("username", "admin")
-                .putString("email", "admin@email.com")
+                .putString("username", validUser.username)
+                .putString("email", validUser.username) // Mock email as username
                 .apply()
             return@withContext true
         }
@@ -120,7 +152,7 @@ class MockAdRepository @Inject constructor(
     private suspend fun cleanUpExpiredAds() {
         val history = getHistoryInternal()
         val now = System.currentTimeMillis()
-        val expiryHours = settingsRepository.settingsFlow.first().devAdExpiry
+        val expiryHours = getAdExpiryHours()
         val expiryMs = expiryHours * 60 * 60 * 1000L
 
         val validAds = history.filter {

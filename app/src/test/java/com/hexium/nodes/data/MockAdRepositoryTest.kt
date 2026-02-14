@@ -1,6 +1,8 @@
 package com.hexium.nodes.data
 
 import android.content.SharedPreferences
+import com.hexium.nodes.data.model.RemoteConfig
+import com.hexium.nodes.data.model.TestUser
 import com.hexium.nodes.data.preferences.AppTheme
 import com.hexium.nodes.data.preferences.SettingsData
 import com.hexium.nodes.data.preferences.SettingsRepository
@@ -22,6 +24,7 @@ class MockAdRepositoryTest {
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var editor: SharedPreferences.Editor
     private lateinit var settingsRepository: SettingsRepository
+    private lateinit var configRepository: ConfigRepository
     private lateinit var repository: MockAdRepository
 
     @BeforeEach
@@ -30,6 +33,7 @@ class MockAdRepositoryTest {
         // Use RETURNS_SELF to automatically handle chaining for Editor methods
         editor = mock(defaultAnswer = Answers.RETURNS_SELF)
         settingsRepository = mock()
+        configRepository = mock()
 
         whenever(sharedPreferences.edit()).thenReturn(editor)
 
@@ -38,13 +42,14 @@ class MockAdRepositoryTest {
             themeMode = AppTheme.SYSTEM,
             useDynamicColors = false,
             serverUrl = "http://test",
-            devAdLimit = 50,
-            devAdRate = 1.0,
-            devAdExpiry = 24,
+            cachedAdLimit = 50,
+            cachedAdRate = 1.0,
+            cachedAdExpiry = 24,
+            cachedAdDelaySeconds = 10L,
         )
         whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
 
-        repository = MockAdRepository(sharedPreferences, settingsRepository)
+        repository = MockAdRepository(sharedPreferences, settingsRepository, configRepository)
     }
 
     @Test
@@ -58,8 +63,6 @@ class MockAdRepositoryTest {
 
         // Then
         assertTrue(result)
-        // Verify putString for credits_double is called (not easy with RETURNS_SELF default answer unless we spy or capture)
-        // But the return value check confirms logic execution path.
     }
 
     @Test
@@ -75,14 +78,30 @@ class MockAdRepositoryTest {
     }
 
     @Test
-    fun `login succeeds with correct credentials`() = runBlocking {
+    fun `login succeeds with correct credentials from config`() = runBlocking {
+        // Given
+        val testUser = TestUser("admin", "1234")
+        val config = RemoteConfig(testUsers = listOf(testUser))
+        whenever(configRepository.fetchConfig()).thenReturn(config)
+
+        // When
         val result = repository.login("admin", "1234")
+
+        // Then
         assertTrue(result)
     }
 
     @Test
     fun `login fails with incorrect credentials`() = runBlocking {
+        // Given
+        val testUser = TestUser("admin", "1234")
+        val config = RemoteConfig(testUsers = listOf(testUser))
+        whenever(configRepository.fetchConfig()).thenReturn(config)
+
+        // When
         val result = repository.login("user", "password")
+
+        // Then
         assertFalse(result)
     }
 }

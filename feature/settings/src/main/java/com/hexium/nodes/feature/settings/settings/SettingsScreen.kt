@@ -156,79 +156,27 @@ fun SettingsScreen(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
+            // Current Configuration Display (Read-Only)
+            ListItem(headlineContent = { Text("App Configuration (Server)", color = MaterialTheme.colorScheme.primary) })
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.ad_limit)) },
+                trailingContent = { Text(uiState.cachedAdLimit.toString()) },
+            )
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.ad_rate)) },
+                trailingContent = { Text(uiState.cachedAdRate.toString()) },
+            )
+
+            ListItem(
+                headlineContent = { Text(stringResource(R.string.ad_expiry_hours)) },
+                trailingContent = { Text(uiState.cachedAdExpiry.toString()) },
+            )
+
             if (BuildConfig.FLAVOR == "dev") {
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 ListItem(headlineContent = { Text(stringResource(R.string.developer_options), color = MaterialTheme.colorScheme.primary) })
-
-                // Dev Configs
-                var adLimit by remember { mutableStateOf(uiState.devAdLimit.toString()) }
-                var adRate by remember { mutableStateOf(uiState.devAdRate.toString()) }
-                var adExpiry by remember { mutableStateOf(uiState.devAdExpiry.toString()) }
-
-                // Sync with UI State only if values differ significantly to prevent typing interference
-                LaunchedEffect(uiState.devAdLimit) {
-                    if (adLimit.toIntOrNull() != uiState.devAdLimit) {
-                        adLimit = uiState.devAdLimit.toString()
-                    }
-                }
-                LaunchedEffect(uiState.devAdRate) {
-                    if (adRate.toDoubleOrNull() != uiState.devAdRate) {
-                        adRate = uiState.devAdRate.toString()
-                    }
-                }
-                LaunchedEffect(uiState.devAdExpiry) {
-                    if (adExpiry.toIntOrNull() != uiState.devAdExpiry) {
-                        adExpiry = uiState.devAdExpiry.toString()
-                    }
-                }
-
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.ad_limit)) },
-                    trailingContent = {
-                        OutlinedTextField(
-                            value = adLimit,
-                            onValueChange = {
-                                if (it.all { char -> char.isDigit() }) {
-                                    adLimit = it
-                                    it.toIntOrNull()?.let { limit -> viewModel.updateDevAdLimit(limit) }
-                                }
-                            },
-                            modifier = Modifier.width(100.dp),
-                            singleLine = true,
-                        )
-                    },
-                )
-
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.ad_rate)) },
-                    trailingContent = {
-                        OutlinedTextField(
-                            value = adRate,
-                            onValueChange = {
-                                adRate = it
-                                it.toDoubleOrNull()?.let { rate -> viewModel.updateDevAdRate(rate) }
-                            },
-                            modifier = Modifier.width(100.dp),
-                            singleLine = true,
-                        )
-                    },
-                )
-
-                ListItem(
-                    headlineContent = { Text(stringResource(R.string.ad_expiry_hours)) },
-                    trailingContent = {
-                        OutlinedTextField(
-                            value = adExpiry,
-                            onValueChange = {
-                                if (it.all { char -> char.isDigit() }) {
-                                    adExpiry = it
-                                    it.toIntOrNull()?.let { hours -> viewModel.updateDevAdExpiry(hours) }
-                                }
-                            },
-                            modifier = Modifier.width(100.dp),
-                            singleLine = true,
-                        )
-                    },
-                )
 
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.open_network_inspector)) },
@@ -238,6 +186,7 @@ fun SettingsScreen(
                             context.startActivity(intent)
                         } catch (e: Exception) {
                             LogUtils.e("SettingsScreen", "Failed to open Chucker", e)
+                            Toast.makeText(context, "Failed to open Inspector: ${e.message}", Toast.LENGTH_SHORT).show()
                         }
                     },
                 )

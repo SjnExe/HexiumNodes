@@ -5,6 +5,8 @@ interface AdRepository {
     suspend fun getMaxAds(): Int
     suspend fun getAdRewardRate(): Double
     suspend fun getAdExpiryHours(): Int
+    suspend fun getAdWatchDelaySeconds(): Long
+    suspend fun getNextAdAvailableTime(): Long
     suspend fun getCredits(): Double
     suspend fun watchAd(): Boolean
     suspend fun getAdHistory(): List<Long>
