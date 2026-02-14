@@ -117,15 +117,6 @@ jobs:
             ./gradlew lintDevDebug testDevDebug assembleDevRelease assembleDevDebug \
               -PversionCode=$VERSION_CODE \
               -PversionName="$VERSION_NAME" 2>&1 | tee build_dev.log
-
-            # Rename artifacts to generic names for easier upload/release
-            # Ensure output directories exist first to avoid errors
-            mkdir -p app/build/outputs/apk/dev/release
-            mkdir -p app/build/outputs/apk/dev/debug
-
-            # Use find to locate and move, ignoring if file is already named correctly
-            find app/build/outputs/apk/dev/release -name "*.apk" ! -name "app-dev-release.apk" -exec mv {} app/build/outputs/apk/dev/release/app-dev-release.apk \;
-            find app/build/outputs/apk/dev/debug -name "*.apk" ! -name "app-dev-debug.apk" -exec mv {} app/build/outputs/apk/dev/debug/app-dev-debug.apk \;
           fi
 
       - name: Generate Summary Log
@@ -165,6 +156,7 @@ jobs:
         with:
           name: build-summary
           path: build_summary.txt
+          compression-level: 0
 
       - name: Upload Lint & Test Results
         if: always()
@@ -176,6 +168,7 @@ jobs:
             **/build/reports/tests/**/index.html
             build_dev.log
             build_stable.log
+          compression-level: 0
 
       - name: Upload Mapping File (Dev)
         if: steps.version.outputs.IS_STABLE == 'false'
@@ -183,6 +176,7 @@ jobs:
         with:
           name: mapping-dev-${{ steps.version.outputs.VERSION_NAME }}
           path: app/build/outputs/mapping/devRelease/mapping.txt
+          compression-level: 0
 
       - name: Upload APKs (Dev)
         if: steps.version.outputs.IS_STABLE == 'false'
@@ -190,8 +184,8 @@ jobs:
         with:
           name: app-dev-${{ steps.version.outputs.VERSION_NAME }}
           path: |
-            app/build/outputs/apk/dev/release/app-dev-release.apk
-            app/build/outputs/apk/dev/debug/app-dev-debug.apk
+            app/build/outputs/apk/dev/release/*.apk
+            app/build/outputs/apk/dev/debug/*.apk
           compression-level: 0
 
       - name: Upload Bundle & APK (Stable)
@@ -213,11 +207,15 @@ jobs:
           # Delete existing 'dev' tag and release to keep it floating
           gh release delete dev --cleanup-tag -y || true
 
+          # Find APK paths dynamically
+          APK_RELEASE=$(find app/build/outputs/apk/dev/release -name "*.apk" | head -n 1)
+          APK_DEBUG=$(find app/build/outputs/apk/dev/debug -name "*.apk" | head -n 1)
+
           # Create new Dev Release
           # Use "dev" as tag name, but title includes version
           gh release create dev \
-            app/build/outputs/apk/dev/release/app-dev-release.apk \
-            app/build/outputs/apk/dev/debug/app-dev-debug.apk \
+            "$APK_RELEASE" \
+            "$APK_DEBUG" \
             --title "Development Build $VERSION_NAME" \
             --notes "Development build triggered by ${{ github.event_name }}. Version: $VERSION_NAME" \
             --prerelease \

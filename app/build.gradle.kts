@@ -96,6 +96,18 @@ android {
         }
     }
 
+    // Strip unused resources. We currently only support English.
+    // In the future, add other language codes here (e.g., "es", "fr") as needed.
+    androidResources {
+        localeFilters += "en"
+    }
+
+    lint {
+        // Skip lint check during release builds to speed up CI.
+        // We explicitly run 'lintDevDebug' in the CI pipeline, so this is redundant.
+        checkReleaseBuilds = false
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -144,8 +156,9 @@ dependencies {
     implementation(libs.play.services.ads)
 
     // Debugging (Dev only)
-    "devImplementation"("com.github.chuckerteam.chucker:library:4.0.0")
-    "stableImplementation"("com.github.chuckerteam.chucker:library-no-op:4.0.0")
+    "devImplementation"(libs.chucker.library)
+    "stableImplementation"(libs.chucker.library.no.op)
+
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     testImplementation(libs.mockito.core)

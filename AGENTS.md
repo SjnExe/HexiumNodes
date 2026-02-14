@@ -52,6 +52,17 @@ sudo update-java-alternatives --set java-1.25.0-openjdk-amd64
 echo y | /opt/android-sdk/cmdline-tools/latest/bin/sdkmanager "build-tools;36.0.0"
 sudo apt autoremove -y
 sudo apt clean
+echo "org.gradle.jvmargs=-Xmx3072m -XX:MaxMetaspaceSize=1g --add-opens=java.base/java.lang=ALL-UNNAMED --add-opens=java.base/java.util=ALL-UNNAMED --add-opens=java.base/java.util.concurrent=ALL-UNNAMED --add-opens=java.base/java.io=ALL-UNNAMED --enable-native-access=ALL-UNNAMED" > gradle.properties
+echo "org.gradle.parallel=true" >> gradle.properties
+echo "org.gradle.caching=true" >> gradle.properties
+echo "org.gradle.configuration-cache=true" >> gradle.properties
+echo "org.gradle.vfs.watch=true" >> gradle.properties
+echo "android.useAndroidX=true" >> gradle.properties
+echo "android.enableJetifier=false" >> gradle.properties
+echo "android.nonTransitiveRClass=true" >> gradle.properties
+echo "android.enableR8.fullMode=true" >> gradle.properties
+echo "ksp.incremental=true" >> gradle.properties
+echo "ksp.incremental.intermodule=true" >> gradle.properties
 ./gradlew --version
 java -version
 ```
