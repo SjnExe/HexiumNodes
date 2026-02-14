@@ -2,20 +2,14 @@ import java.util.Properties
 import java.io.FileInputStream
 
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.compose.compiler)
-    alias(libs.plugins.spotless)
-}
-
-kotlin {
-    jvmToolchain(25)
+    id("hexium.android.application")
+    id("hexium.android.compose")
+    id("hexium.android.hilt")
+    id("hexium.spotless")
 }
 
 android {
     namespace = "com.hexium.nodes"
-    compileSdk = 36
 
     signingConfigs {
         create("release") {
@@ -24,22 +18,18 @@ android {
             val storeFileEnv = System.getenv("STORE_FILE")
 
             if (storeFileEnv != null) {
-                // CI Environment: Keystore file path is passed via env or created from secret
                 storeFile = file(storeFileEnv)
                 storePassword = System.getenv("STORE_PASSWORD")
                 keyAlias = System.getenv("KEY_ALIAS")
                 keyPassword = System.getenv("KEY_PASSWORD")
             } else if (keystorePropertiesFile.exists()) {
-                // Local Environment
                 val properties = Properties()
                 properties.load(FileInputStream(keystorePropertiesFile))
-
                 storeFile = file(properties.getProperty("storeFile"))
                 storePassword = properties.getProperty("storePassword")
                 keyAlias = properties.getProperty("keyAlias")
                 keyPassword = properties.getProperty("keyPassword")
             } else if (debugKeystoreFile.exists()) {
-                // CI/Local Fallback: Use debug.keystore if present (e.g. PR builds)
                 storeFile = debugKeystoreFile
                 storePassword = "android"
                 keyAlias = "androiddebugkey"
@@ -50,20 +40,8 @@ android {
 
     defaultConfig {
         applicationId = "com.hexium.nodes"
-        minSdk = 24
-        targetSdk = 36
-
-        compileOptions {
-            sourceCompatibility = JavaVersion.VERSION_25
-            targetCompatibility = JavaVersion.VERSION_25
-        }
-
-        val versionCodeParam = project.findProperty("versionCode") as? String
-        val versionNameParam = project.findProperty("versionName") as? String
-
-        versionCode = versionCodeParam?.toInt() ?: 1
-        versionName = versionNameParam ?: "1.0"
-
+        versionCode = (project.findProperty("versionCode") as? String)?.toInt() ?: 1
+        versionName = (project.findProperty("versionName") as? String) ?: "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
@@ -96,33 +74,12 @@ android {
         }
     }
 
-    // Strip unused resources. We currently only support English.
-    // In the future, add other language codes here (e.g., "es", "fr") as needed.
-    androidResources {
-        localeFilters += "en"
-    }
-
     lint {
-        // Skip lint check during release builds to speed up CI.
-        // We explicitly run 'lintDevDebug' in the CI pipeline, so this is redundant.
         checkReleaseBuilds = false
     }
 
     buildFeatures {
-        compose = true
         buildConfig = true
-    }
-
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
-    }
-
-    testOptions {
-        unitTests.all {
-            it.useJUnitPlatform()
-        }
     }
 }
 
@@ -140,16 +97,11 @@ dependencies {
     implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.navigation.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.material)
 
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
 
     // Ads
@@ -165,21 +117,6 @@ dependencies {
     testImplementation(libs.mockito.kotlin)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-}
-
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin {
-        target("**/*.kt")
-        ktlint().editorConfigOverride(mapOf("ktlint_standard_function-naming" to "disabled", "ktlint_standard_no-wildcard-imports" to "disabled"))
-    }
-}
-
-tasks.withType<JavaCompile>().configureEach {
-    javaCompiler.set(javaToolchains.compilerFor {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    })
 }

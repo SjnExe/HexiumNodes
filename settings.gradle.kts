@@ -29,3 +29,5 @@ include(":data")
 include(":feature:auth")
 include(":feature:home")
 include(":feature:settings")
+
+includeBuild("build-logic")

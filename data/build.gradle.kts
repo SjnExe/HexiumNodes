@@ -1,27 +1,11 @@
 plugins {
-    alias(libs.plugins.android.library)
-    alias(libs.plugins.google.devtools.ksp)
-    alias(libs.plugins.hilt.android)
-    alias(libs.plugins.spotless)
-}
-
-kotlin {
-    jvmToolchain(25)
+    id("hexium.android.library")
+    id("hexium.android.hilt")
+    id("hexium.spotless")
 }
 
 android {
     namespace = "com.hexium.nodes.data"
-    compileSdk = 36
-    defaultConfig {
-        minSdk = 24
-    }
-}
-
-configure<com.diffplug.gradle.spotless.SpotlessExtension> {
-    kotlin {
-        target("**/*.kt")
-        ktlint().editorConfigOverride(mapOf("ktlint_standard_function-naming" to "disabled", "ktlint_standard_no-wildcard-imports" to "disabled"))
-    }
 }
 
 dependencies {
@@ -31,9 +15,9 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
 
-    // Hilt
-    implementation(libs.hilt.android)
-    ksp(libs.hilt.compiler)
+    // Hilt - Plugin handles deps, but we might need explicit deps if plugin deps are not sufficient?
+    // Convention plugin adds hilt-android and hilt-compiler (ksp).
+    // So we don't need to add them here.
 
     // Networking
     implementation(libs.retrofit)

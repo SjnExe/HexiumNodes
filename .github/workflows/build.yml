@@ -76,6 +76,7 @@ jobs:
         with:
           cache-disabled: false
           cache-read-only: false
+          # cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }} # Required for configuration-cache saving
 
       - name: Decode Keystore
         env:
