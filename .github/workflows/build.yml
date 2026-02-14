@@ -73,6 +73,9 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-disabled: false
+          cache-read-only: false
 
       - name: Decode Keystore
         env:
@@ -91,15 +94,7 @@ jobs:
             echo "Using generated debug.keystore for signing."
           fi
 
-      - name: Run Lint and Tests
-        env:
-          VERSION_NAME: ${{ steps.version.outputs.VERSION_NAME }}
-          VERSION_CODE: ${{ steps.version.outputs.VERSION_CODE }}
-        run: |
-          set -o pipefail
-          ./gradlew lintDevDebug testDevDebug 2>&1 | tee lint_test.log
-
-      - name: Build App
+      - name: Build and Verify
         id: build
         env:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
@@ -112,14 +107,14 @@ jobs:
           set -o pipefail
 
           if [ "$IS_STABLE" == "true" ]; then
-            # Build Stable Release (AAB & APK)
-            ./gradlew bundleStableRelease assembleStableRelease \
+            # Build Stable Release (AAB & APK) + Lint/Test
+            ./gradlew lintDevDebug testDevDebug bundleStableRelease assembleStableRelease \
               -PversionCode=$VERSION_CODE \
               -PversionName="$VERSION_NAME" 2>&1 | tee build_stable.log
           else
-            # Build Dev Flavor (Release & Debug APKs)
+            # Build Dev Flavor (Release & Debug APKs) + Lint/Test
             # We build Release to test minification, and Debug for debugging features
-            ./gradlew assembleDevRelease assembleDevDebug \
+            ./gradlew lintDevDebug testDevDebug assembleDevRelease assembleDevDebug \
               -PversionCode=$VERSION_CODE \
               -PversionName="$VERSION_NAME" 2>&1 | tee build_dev.log
 
@@ -156,7 +151,6 @@ jobs:
             fi
           }
 
-          extract_errors "lint_test.log"
           extract_errors "build_stable.log"
           extract_errors "build_dev.log"
 
@@ -177,7 +171,8 @@ jobs:
           path: |
             **/build/reports/lint-results-*.html
             **/build/reports/tests/**/index.html
-            lint_test.log
+            build_dev.log
+            build_stable.log
 
       - name: Upload APKs (Dev)
         if: steps.version.outputs.IS_STABLE == 'false'
