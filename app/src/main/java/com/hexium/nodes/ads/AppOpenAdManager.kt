@@ -20,7 +20,8 @@ import javax.inject.Singleton
 @Singleton
 class AppOpenAdManager @Inject constructor(
     private val application: Application,
-) : DefaultLifecycleObserver, Application.ActivityLifecycleCallbacks {
+) : DefaultLifecycleObserver,
+    Application.ActivityLifecycleCallbacks {
 
     private var appOpenAd: AppOpenAd? = null
     private var isLoadingAd = false
@@ -111,9 +112,7 @@ class AppOpenAdManager @Inject constructor(
         }
     }
 
-    private fun isAdAvailable(): Boolean {
-        return appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
-    }
+    private fun isAdAvailable(): Boolean = appOpenAd != null && wasLoadTimeLessThanNHoursAgo(4)
 
     private fun wasLoadTimeLessThanNHoursAgo(numHours: Long): Boolean {
         val dateDifference = Date().time - loadTime

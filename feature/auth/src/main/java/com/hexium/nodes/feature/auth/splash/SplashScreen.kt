@@ -95,6 +95,7 @@ fun SplashScreen(
                     // Minimalist: No circular loader to feel "instant" unless it takes time?
                     // User requested removing it.
                 }
+
                 AuthState.Maintenance -> {
                     Text(
                         text = "System under maintenance. Please try again later.",
@@ -103,6 +104,7 @@ fun SplashScreen(
                         color = MaterialTheme.colorScheme.error,
                     )
                 }
+
                 AuthState.UpdateRequired -> {
                     Text(
                         text = "New version available. Please update the app.",
@@ -111,6 +113,7 @@ fun SplashScreen(
                         color = MaterialTheme.colorScheme.primary,
                     )
                 }
+
                 AuthState.Error -> {
                     Text(
                         text = "Unable to connect to server. Please check your internet connection.",
@@ -123,6 +126,7 @@ fun SplashScreen(
                         Text("Retry")
                     }
                 }
+
                 else -> {}
             }
         }

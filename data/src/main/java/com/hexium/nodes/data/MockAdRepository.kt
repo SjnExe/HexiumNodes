@@ -145,9 +145,7 @@ class MockAdRepository @Inject constructor(
         return@withContext prefs.getString("email", null)
     }
 
-    private fun getHistoryInternal(): Set<String> {
-        return prefs.getStringSet("ad_history", emptySet()) ?: emptySet()
-    }
+    private fun getHistoryInternal(): Set<String> = prefs.getStringSet("ad_history", emptySet()) ?: emptySet()
 
     private suspend fun cleanUpExpiredAds() {
         val history = getHistoryInternal()
