@@ -72,5 +72,9 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
             }
         }
 
+        tasks.withType<Test>().configureEach {
+            useJUnitPlatform()
+            setProperty("failOnNoDiscoveredTests", false)
+        }
     }
 }
