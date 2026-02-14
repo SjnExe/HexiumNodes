@@ -19,4 +19,7 @@
 -keep class androidx.room.RoomDatabase
 
 # Keep Data Models for Gson Serialization/Deserialization
--keep class com.hexium.nodes.data.model.** { *; }
+# Use @Keep annotation or ensure specific fields are used for reflection if needed.
+# For R8 full mode, we should avoid wildcard keeps on data models unless strictly necessary.
+# If these models are used with GSON, we need to keep the fields to prevent renaming.
+-keepclassmembers class com.hexium.nodes.data.model.** { <fields>; }
