@@ -22,7 +22,7 @@ sealed class AuthState {
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val repository: AdRepository,
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
 ) : ViewModel() {
     private val _authState = MutableStateFlow<AuthState>(AuthState.Loading)
     val authState: StateFlow<AuthState> = _authState
@@ -56,12 +56,12 @@ class SplashViewModel @Inject constructor(
                     return@launch
                 }
             } else {
-               // Config fetch failed. If we can't verify maintenance, what do we do?
-               // For now, proceed to local auth check, or show Error?
-               // User said "App should give the standard error messages when it can't connect".
-               // So maybe Error state.
-               _authState.value = AuthState.Error
-               return@launch
+                // Config fetch failed. If we can't verify maintenance, what do we do?
+                // For now, proceed to local auth check, or show Error?
+                // User said "App should give the standard error messages when it can't connect".
+                // So maybe Error state.
+                _authState.value = AuthState.Error
+                return@launch
             }
 
             checkAuth()

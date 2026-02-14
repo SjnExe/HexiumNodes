@@ -22,7 +22,7 @@
     <string name="logs_save_failed">Failed to save logs</string>
     <string name="current_balance">Current Balance</string>
     <string name="user_label">User: %s</string>
-    <string name="daily_ad_limit">Daily Ad Limit: %d / %d</string>
+    <string name="daily_ad_limit">Daily Ad Limit: %1$d / %2$d</string>
     <string name="watch_ad">Watch Ad</string>
     <string name="earn_credits">Earn %s Credits</string>
     <string name="history">History</string>

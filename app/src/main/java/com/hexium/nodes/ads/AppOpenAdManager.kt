@@ -7,7 +7,6 @@ import android.content.res.Configuration
 import android.os.Bundle
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ProcessLifecycleOwner
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.FullScreenContentCallback
@@ -20,7 +19,7 @@ import javax.inject.Singleton
 
 @Singleton
 class AppOpenAdManager @Inject constructor(
-    private val application: Application
+    private val application: Application,
 ) : DefaultLifecycleObserver, Application.ActivityLifecycleCallbacks {
 
     private var appOpenAd: AppOpenAd? = null
@@ -76,7 +75,7 @@ class AppOpenAdManager @Inject constructor(
                     isLoadingAd = false
                     LogUtils.e(TAG, "App Open Ad failed to load ($adUnitId): ${loadAdError.code} - ${loadAdError.message} - ${loadAdError.domain}", null)
                 }
-            }
+            },
         )
     }
 
@@ -103,12 +102,12 @@ class AppOpenAdManager @Inject constructor(
                 isShowingAd = true
                 appOpenAd?.show(activity)
             } ?: run {
-                 // If no activity is available, we can't show.
-                 // But we can try to reload if expired.
-                 loadAd(application)
+                // If no activity is available, we can't show.
+                // But we can try to reload if expired.
+                loadAd(application)
             }
         } else {
-             loadAd(application)
+            loadAd(application)
         }
     }
 

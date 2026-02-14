@@ -111,7 +111,7 @@ class MockAdRepository @Inject constructor(
         // Fallback to hardcoded users if fetch fails or for local dev convenience
         val testUsers = config?.testUsers ?: listOf(
             com.hexium.nodes.data.model.TestUser("testuser", "password123"),
-            com.hexium.nodes.data.model.TestUser("admin", "1234")
+            com.hexium.nodes.data.model.TestUser("admin", "1234"),
         )
 
         val validUser = testUsers.find {

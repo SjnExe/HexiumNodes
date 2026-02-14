@@ -11,7 +11,7 @@ import javax.inject.Singleton
 @Singleton
 class ConfigRepository @Inject constructor(
     private val configService: ConfigService,
-    private val settingsRepository: SettingsRepository
+    private val settingsRepository: SettingsRepository,
 ) {
     suspend fun fetchConfig(): RemoteConfig? {
         val serverUrl = settingsRepository.settingsFlow.first().serverUrl
