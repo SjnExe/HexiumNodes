@@ -182,6 +182,7 @@ jobs:
           path: |
             app/build/outputs/apk/dev/release/app-dev-release.apk
             app/build/outputs/apk/dev/debug/app-dev-debug.apk
+          compression-level: 0
 
       - name: Upload Bundle & APK (Stable)
         if: steps.version.outputs.IS_STABLE == 'true'
@@ -191,6 +192,7 @@ jobs:
           path: |
             app/build/outputs/bundle/stableRelease/*.aab
             app/build/outputs/apk/stable/release/*.apk
+          compression-level: 0
 
       - name: Create/Update Dev Release
         if: steps.version.outputs.IS_STABLE == 'false'
