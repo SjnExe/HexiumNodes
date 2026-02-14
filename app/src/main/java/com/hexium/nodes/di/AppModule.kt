@@ -29,16 +29,12 @@ abstract class AppModule {
         @Singleton
         fun provideSharedPreferences(
             @ApplicationContext context: Context,
-        ): SharedPreferences {
-            return context.getSharedPreferences("hexium_prefs", Context.MODE_PRIVATE)
-        }
+        ): SharedPreferences = context.getSharedPreferences("hexium_prefs", Context.MODE_PRIVATE)
 
         @Provides
         @Singleton
-        fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient {
-            return OkHttpClient.Builder()
-                .addInterceptor(ChuckerInterceptor.Builder(context).build())
-                .build()
-        }
+        fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient = OkHttpClient.Builder()
+            .addInterceptor(ChuckerInterceptor.Builder(context).build())
+            .build()
     }
 }

@@ -16,17 +16,13 @@ object DataModule {
 
     @Provides
     @Singleton
-    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl("https://localhost/") // Base URL is ignored/overridden by @Url
-            .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit = Retrofit.Builder()
+        .baseUrl("https://localhost/") // Base URL is ignored/overridden by @Url
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
     @Provides
     @Singleton
-    fun provideConfigService(retrofit: Retrofit): ConfigService {
-        return retrofit.create(ConfigService::class.java)
-    }
+    fun provideConfigService(retrofit: Retrofit): ConfigService = retrofit.create(ConfigService::class.java)
 }
