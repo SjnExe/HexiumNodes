@@ -19,6 +19,9 @@ class AndroidApplicationConventionPlugin : Plugin<Project> {
         with(target) {
             with(pluginManager) {
                 apply("com.android.application")
+                apply("hexium.detekt")
+                apply("hexium.kover")
+                apply("hexium.roborazzi")
             }
 
             extensions.configure<ApplicationExtension> {

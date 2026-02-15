@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.version.catalog.update)
+    alias(libs.plugins.dependency.analysis)
+    alias(libs.plugins.module.graph)
 }
 
 versionCatalogUpdate {
