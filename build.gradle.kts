@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import nl.littlerobots.vcu.plugin.resolver.VersionSelectors
 
 plugins {
     alias(libs.plugins.android.application) apply false
@@ -8,6 +9,9 @@ plugins {
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.compose.compiler) apply false
     alias(libs.plugins.spotless) apply false
+    alias(libs.plugins.version.catalog.update)
 }
 
-// No buildscript block needed here for plugins defined in libs.versions.toml
+versionCatalogUpdate {
+    versionSelector(VersionSelectors.STABLE)
+}
