@@ -28,6 +28,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
                 }
 
                 compileOptions {
+                    // Align Java target with Kotlin's maximum supported target (24)
+                    // We still use the Java 25 Toolchain for compilation (APIs).
                     sourceCompatibility = JavaVersion.VERSION_24
                     targetCompatibility = JavaVersion.VERSION_24
                     isCoreLibraryDesugaringEnabled = true
@@ -68,6 +70,8 @@ class AndroidLibraryConventionPlugin : Plugin<Project> {
 
         tasks.withType<KotlinCompile>().configureEach {
             compilerOptions {
+                // Kotlin 2.3.x does not yet support JVM_25 target, so we fall back to JVM_24
+                // but the code runs on Java 25.
                 jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24)
             }
         }
