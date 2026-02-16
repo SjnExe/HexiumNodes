@@ -15,6 +15,7 @@ import com.hexium.nodes.core.model.ServerData
 @Composable
 fun ServerListScreen(
     onNavigateToDashboard: (String) -> Unit,
+    onNavigateToCloudflare: () -> Unit,
     viewModel: ServerListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -42,6 +43,12 @@ fun ServerListScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = { viewModel.loadServers() }) {
                         Text("Retry")
+                    }
+                    if (state.message.contains("403")) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = onNavigateToCloudflare) {
+                            Text("Verify Cloudflare")
+                        }
                     }
                 }
             }

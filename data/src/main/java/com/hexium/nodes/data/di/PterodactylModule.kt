@@ -33,6 +33,11 @@ object PterodactylModule {
                 .header("Referer", "https://panel.hexiumnodes.cloud/")
                 .header("Origin", "https://panel.hexiumnodes.cloud")
 
+            val cookies = securePrefs.getCookies()
+            if (!cookies.isNullOrBlank()) {
+                request.header("Cookie", cookies)
+            }
+
             if (!apiKey.isNullOrBlank()) {
                 val token = if (apiKey.startsWith("Bearer ")) apiKey else "Bearer $apiKey"
                 request.header("Authorization", token)

@@ -23,6 +23,7 @@ class SecurePreferencesRepository @Inject constructor(
 
     companion object {
         private const val KEY_API_KEY = "pterodactyl_api_key"
+        private const val KEY_COOKIES = "pterodactyl_cookies"
     }
 
     fun getApiKey(): String? = sharedPreferences.getString(KEY_API_KEY, null)
@@ -33,5 +34,15 @@ class SecurePreferencesRepository @Inject constructor(
 
     fun clearApiKey() {
         sharedPreferences.edit().remove(KEY_API_KEY).apply()
+    }
+
+    fun getCookies(): String? = sharedPreferences.getString(KEY_COOKIES, null)
+
+    fun setCookies(cookies: String) {
+        sharedPreferences.edit().putString(KEY_COOKIES, cookies).apply()
+    }
+
+    fun clearCookies() {
+        sharedPreferences.edit().remove(KEY_COOKIES).apply()
     }
 }

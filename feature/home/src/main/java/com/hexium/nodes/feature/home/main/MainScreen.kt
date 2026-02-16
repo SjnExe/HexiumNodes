@@ -26,6 +26,7 @@ import com.hexium.nodes.feature.home.server.dashboard.ServerDashboardScreen
 import com.hexium.nodes.feature.home.server.files.FileBrowserScreen
 import com.hexium.nodes.feature.home.server.files.FileEditorScreen
 import com.hexium.nodes.feature.home.server.list.ServerListScreen
+import com.hexium.nodes.feature.home.server.list.CloudflareVerificationScreen
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -90,6 +91,15 @@ fun MainScreen(
                         onNavigateToDashboard = { serverId ->
                             navController.navigate("server_detail/$serverId")
                         },
+                        onNavigateToCloudflare = {
+                            navController.navigate("cloudflare_verification")
+                        }
+                    )
+                }
+                composable("cloudflare_verification") {
+                    CloudflareVerificationScreen(
+                        onNavigateBack = { navController.popBackStack() },
+                        onSuccess = { navController.popBackStack() }
                     )
                 }
                 composable("server_detail/{serverId}") { backStackEntry ->
