@@ -16,8 +16,7 @@ import com.hexium.nodes.core.ui.theme.HexiumNodesTheme
 import com.hexium.nodes.data.preferences.AppTheme
 import com.hexium.nodes.feature.auth.login.LoginScreen
 import com.hexium.nodes.feature.auth.splash.SplashScreen
-import com.hexium.nodes.feature.home.HomeScreen
-import com.hexium.nodes.feature.home.HomeViewModel
+import com.hexium.nodes.feature.home.main.MainScreen
 import com.hexium.nodes.feature.settings.SettingsViewModel
 import com.hexium.nodes.feature.settings.settings.SettingsScreen
 import dagger.hilt.android.AndroidEntryPoint
@@ -74,9 +73,7 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         composable("home") {
-                            val mainViewModel: HomeViewModel = hiltViewModel()
-                            HomeScreen(
-                                viewModel = mainViewModel,
+                            MainScreen(
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
                                 },

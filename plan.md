@@ -1,19 +1,47 @@
-# Execution Plan - Optimization & Refactoring
+# Implementation Plan - Pterodactyl Panel Integration
 
-## Current Status
-- **Refactoring:** Implemented Convention Plugins (`build-logic`) to consolidate build logic and remove duplication across modules.
-- **Dependencies Updated:** `libs.versions.toml` updated with Spotless 8.2.1, JUnit 6.0.2, etc.
-- **Build Optimized:** `gradle.properties` updated with `nonTransitiveRClass`, `R8.fullMode`, and `ksp.incremental`.
-- **CI Optimized:** `.github/workflows/build.yml` refactored for wildcard artifacts and faster compression. Added note about configuration cache encryption key.
+## Goal
+Integrate a fully functional Pterodactyl Minecraft Server Panel into the "Hexium Nodes" Android app. This includes a new navigation structure, a "Smart Home" for server selection, and feature-rich Dashboard, Console, and File Manager screens. The UI will strictly follow Material You (Material 3) guidelines.
 
-## Completed Tasks
-- **Convention Plugins:** Created `build-logic` module with plugins for Android App, Library, Compose, Hilt, and Spotless. Migrated all modules to use these plugins.
-- **Fix Build Failure:** Configured `tasks.withType<JavaCompile>` to use Java 25 toolchain via convention plugin, ensuring correct compilation even if the Gradle Daemon runs on an older JDK.
-- **Setup Script:** Updated `AGENTS.md` to use read-only system setup and explicit `JAVA_HOME=OpenJdk25`.
-- **Gradle Properties:** Added optimization flags (`nonTransitiveRClass`, `R8.fullMode`) to `gradle.properties`.
-- **R8 Optimization:** Verified `android.enableR8.fullMode=true` is working. Refined `proguard-rules.pro` to replace broad `-keep class ... { *; }` with focused `-keepclassmembers` for data models.
+## Architecture & Navigation
+1.  **Navigation Refactor:**
+    -   **MainScreen:** Uses `Scaffold` with a Bottom Navigation Bar containing "Servers" and "Rewards" tabs.
+    -   **Nested Graph:** The "Servers" tab uses a nested navigation graph (`servers_graph`) to handle `server_list` -> `server_detail` transitions while keeping the bottom bar visible.
+    -   **Smart Home Logic:** Automatically navigates to the single server dashboard if only one server is available.
 
-## Next Steps for Future Agent
-1.  **CI Cache:** If possible, add `GRADLE_ENCRYPTION_KEY` secret to enable saving configuration cache in CI.
-2.  **KSP Stability:** Monitor the KSP `NullPointerException`. If it causes build instability, consider disabling `ksp.incremental`.
-3.  **Test Coverage:** Expand unit tests for core logic.
+## Data Layer
+2.  **Pterodactyl API:**
+    -   **Service:** Retrofit service for REST endpoints (`/api/client/...`) including Server List, Resources, Power, Files, and Download.
+    -   **Repository:** `PterodactylRepository` handles data fetching and caching.
+    -   **WebSocket:** Uses OkHttp for real-time Console streaming.
+    -   **Security:** API Key is stored in `EncryptedSharedPreferences`.
+    -   **Models:** Data classes for `ServerAttributes`, `Resources`, `PowerSignal`, `FileData`, etc.
+
+## Feature Implementation
+
+### 1. Settings (Developer Options)
+-   Added input field for **Pterodactyl API Key** in Developer Options.
+-   Key is securely stored and used for all API requests.
+
+### 2. Server List & Dashboard
+-   **Server List:** Displays servers in Material Cards. Handles Loading/Error states.
+-   **Dashboard:**
+    -   **Status:** Shows current state (Running, Offline, etc.).
+    -   **Power Controls:** Start, Stop, Restart, Kill buttons.
+    -   **Resources:** Live usage stats for CPU, RAM, and Disk.
+
+### 3. Console
+-   **WebSocket:** Real-time bi-directional communication.
+-   **UI:** Scrollable log view with command input field.
+-   **Features:** ANSI color stripping, Auto-scroll, Clear logs.
+
+### 4. File Manager
+-   **Browser:** Navigate directories, view file details (size, mode).
+-   **Editor:** View and Edit text files. Save changes back to server.
+-   **Download:** Download files to device using Android `DownloadManager`.
+-   **Upload:** Upload files from device using system file picker (`ActivityResultContracts.GetContent`).
+
+## UI/UX Polish
+-   Consistent Material 3 styling.
+-   Error handling with Retry buttons.
+-   Loading indicators for async operations.

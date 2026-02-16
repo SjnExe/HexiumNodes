@@ -3,11 +3,13 @@ package com.hexium.nodes.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.hexium.nodes.data.AdRepository
+import com.hexium.nodes.data.PterodactylRepository
 import com.hexium.nodes.data.preferences.AppTheme
 import com.hexium.nodes.data.preferences.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,10 +17,11 @@ import javax.inject.Inject
 class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val adRepository: AdRepository,
+    private val pterodactylRepository: PterodactylRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SettingsUiState())
-    val uiState: StateFlow<SettingsUiState> = _uiState
+    val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -39,10 +42,13 @@ class SettingsViewModel @Inject constructor(
             val username = adRepository.getUsername()
             val email = adRepository.getEmail()
 
+            val apiKey = pterodactylRepository.getApiKey()
+
             _uiState.value = _uiState.value.copy(
                 isLoggedIn = loggedIn,
                 username = username,
                 email = email,
+                pterodactylApiKey = apiKey,
             )
         }
     }
@@ -55,7 +61,10 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch { settingsRepository.setDynamicColors(useDynamic) }
     }
 
-    // Removed update methods for server configs as they are now read-only/cached
+    fun updateApiKey(key: String) {
+        pterodactylRepository.setApiKey(key)
+        _uiState.value = _uiState.value.copy(pterodactylApiKey = key)
+    }
 
     fun logout() {
         viewModelScope.launch {
@@ -75,4 +84,5 @@ data class SettingsUiState(
     val cachedAdLimit: Int = 50,
     val cachedAdRate: Double = 1.0,
     val cachedAdExpiry: Int = 24,
+    val pterodactylApiKey: String? = null,
 )
