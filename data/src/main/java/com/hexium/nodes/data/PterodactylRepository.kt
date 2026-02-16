@@ -32,6 +32,11 @@ interface PterodactylRepository {
     suspend fun writeFile(serverId: String, filePath: String, content: String)
     suspend fun getDownloadUrl(serverId: String, filePath: String): String
     suspend fun uploadFile(serverId: String, directory: String, fileName: String, inputStream: java.io.InputStream, mimeType: String)
+    suspend fun renameFile(serverId: String, root: String, from: String, to: String)
+    suspend fun deleteFiles(serverId: String, root: String, files: List<String>)
+    suspend fun compressFiles(serverId: String, root: String, files: List<String>): FileData
+    suspend fun decompressFile(serverId: String, root: String, file: String)
+    suspend fun createFolder(serverId: String, root: String, name: String)
 
     suspend fun createConsoleSession(serverId: String): ConsoleSession
 
@@ -74,6 +79,26 @@ class PterodactylRepositoryImpl @Inject constructor(
         val requestBody = content.toRequestBody(mimeType.toMediaTypeOrNull())
         val part = okhttp3.MultipartBody.Part.createFormData("files", fileName, requestBody)
         service.uploadFileToUrl(uploadUrl, part, directory)
+    }
+
+    override suspend fun renameFile(serverId: String, root: String, from: String, to: String) {
+        service.renameFile(serverId, RenameFileRequest(root, listOf(RenameFileEntry(from, to))))
+    }
+
+    override suspend fun deleteFiles(serverId: String, root: String, files: List<String>) {
+        service.deleteFiles(serverId, DeleteFilesRequest(root, files))
+    }
+
+    override suspend fun compressFiles(serverId: String, root: String, files: List<String>): FileData {
+        return service.compressFiles(serverId, CompressFilesRequest(root, files))
+    }
+
+    override suspend fun decompressFile(serverId: String, root: String, file: String) {
+        service.decompressFile(serverId, DecompressFileRequest(root, file))
+    }
+
+    override suspend fun createFolder(serverId: String, root: String, name: String) {
+        service.createFolder(serverId, CreateFolderRequest(root, name))
     }
 
     override suspend fun createConsoleSession(serverId: String): ConsoleSession {

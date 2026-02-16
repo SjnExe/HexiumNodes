@@ -35,4 +35,19 @@ interface PterodactylService {
 
     @POST("api/client/servers/{id}/files/write")
     suspend fun writeFile(@Path("id") serverId: String, @Query("file") filePath: String, @Body content: okhttp3.RequestBody)
+
+    @PUT("api/client/servers/{id}/files/rename")
+    suspend fun renameFile(@Path("id") serverId: String, @Body request: RenameFileRequest)
+
+    @POST("api/client/servers/{id}/files/delete")
+    suspend fun deleteFiles(@Path("id") serverId: String, @Body request: DeleteFilesRequest)
+
+    @POST("api/client/servers/{id}/files/compress")
+    suspend fun compressFiles(@Path("id") serverId: String, @Body request: CompressFilesRequest): FileData
+
+    @POST("api/client/servers/{id}/files/decompress")
+    suspend fun decompressFile(@Path("id") serverId: String, @Body request: DecompressFileRequest)
+
+    @POST("api/client/servers/{id}/files/create-folder")
+    suspend fun createFolder(@Path("id") serverId: String, @Body request: CreateFolderRequest)
 }

@@ -8,10 +8,26 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import android.annotation.SuppressLint
+import android.webkit.JavascriptInterface
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.viewinterop.AndroidView
+import android.widget.Toast
 
+class WebInterface(
+    private val onEditorReady: () -> Unit
+) {
+    @JavascriptInterface
+    fun onEditorReady() {
+        onEditorReady()
+    }
+}
+
+@SuppressLint("SetJavaScriptEnabled")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FileEditorScreen(
@@ -21,21 +37,32 @@ fun FileEditorScreen(
     viewModel: FileEditorViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var content by remember { mutableStateOf("") }
-
-    // Update content when loaded from VM
-    LaunchedEffect(uiState.content) {
-        if (!uiState.isLoading && uiState.content.isNotEmpty()) {
-            content = uiState.content
-        }
-    }
+    val context = LocalContext.current
+    var webView: WebView? by remember { mutableStateOf(null) }
+    var isEditorReady by remember { mutableStateOf(false) }
 
     LaunchedEffect(serverId, filePath) {
         viewModel.loadFile(serverId, filePath)
     }
 
+    LaunchedEffect(uiState.content, isEditorReady) {
+        if (isEditorReady && !uiState.isLoading && uiState.content.isNotEmpty()) {
+            // Escape content for JS string
+            val safeContent = uiState.content
+                .replace("\\", "\\\\")
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+                .replace("\r", "")
+
+            webView?.post {
+                webView?.evaluateJavascript("setContent(\"$safeContent\", \"$filePath\")", null)
+            }
+        }
+    }
+
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
+            Toast.makeText(context, "File saved successfully", Toast.LENGTH_SHORT).show()
             viewModel.resetSuccess()
         }
     }
@@ -50,7 +77,20 @@ fun FileEditorScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.saveFile(content) }) {
+                    IconButton(onClick = {
+                        webView?.evaluateJavascript("getContent()") { value ->
+                            // Value is returned as a JSON string (e.g., "content"), so strip quotes
+                            val content = if (value != null && value.length >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+                                value.substring(1, value.length - 1)
+                                    .replace("\\n", "\n")
+                                    .replace("\\\"", "\"")
+                                    .replace("\\\\", "\\")
+                            } else {
+                                value ?: ""
+                            }
+                            viewModel.saveFile(content)
+                        }
+                    }) {
                         if (uiState.isSaving) {
                             CircularProgressIndicator(modifier = Modifier.size(24.dp), color = MaterialTheme.colorScheme.onSurface)
                         } else {
@@ -67,16 +107,21 @@ fun FileEditorScreen(
             } else if (uiState.error != null) {
                 Text("Error: ${uiState.error}", modifier = Modifier.align(Alignment.Center), color = MaterialTheme.colorScheme.error)
             } else {
-                TextField(
-                    value = content,
-                    onValueChange = { content = it },
-                    modifier = Modifier.fillMaxSize(),
-                    textStyle = LocalTextStyle.current.copy(fontFamily = FontFamily.Monospace),
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                        disabledContainerColor = MaterialTheme.colorScheme.surface,
-                    ),
+                AndroidView(
+                    factory = { ctx ->
+                        WebView(ctx).apply {
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            addJavascriptInterface(WebInterface {
+                                isEditorReady = true
+                            }, "Android")
+
+                            webViewClient = WebViewClient()
+                            loadUrl("file:///android_asset/editor.html")
+                            webView = this
+                        }
+                    },
+                    modifier = Modifier.fillMaxSize()
                 )
             }
         }

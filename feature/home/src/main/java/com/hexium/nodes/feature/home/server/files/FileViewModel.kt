@@ -18,6 +18,9 @@ data class FileUiState(
     val files: List<FileData> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
+    val selectionMode: Boolean = false,
+    val selectedFiles: Set<String> = emptySet(),
+    val isActionSuccess: Boolean = false,
 )
 
 @HiltViewModel
@@ -34,10 +37,8 @@ class FileViewModel @Inject constructor(
     fun loadFiles(serverId: String, path: String = "/") {
         this.serverId = serverId
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, error = null, currentPath = path)
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null, currentPath = path, selectionMode = false, selectedFiles = emptySet())
             try {
-                // If path is root, some APIs expect empty string or "/"?
-                // Pterodactyl typically uses "/" for root or empty.
                 val files = repository.listFiles(serverId, path)
                 _uiState.value = _uiState.value.copy(files = files, isLoading = false)
             } catch (e: Exception) {
@@ -61,6 +62,118 @@ class FileViewModel @Inject constructor(
         loadFiles(serverId!!, finalPath)
     }
 
+    fun toggleSelection(fileName: String) {
+        val currentSelection = _uiState.value.selectedFiles.toMutableSet()
+        if (currentSelection.contains(fileName)) {
+            currentSelection.remove(fileName)
+        } else {
+            currentSelection.add(fileName)
+        }
+        val newSelectionMode = currentSelection.isNotEmpty()
+        _uiState.value = _uiState.value.copy(selectedFiles = currentSelection, selectionMode = newSelectionMode)
+    }
+
+    fun clearSelection() {
+        _uiState.value = _uiState.value.copy(selectionMode = false, selectedFiles = emptySet())
+    }
+
+    fun resetSuccess() {
+        _uiState.value = _uiState.value.copy(isActionSuccess = false, error = null)
+    }
+
+    fun createFolder(name: String) {
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.createFolder(serverId, currentPath, name)
+                loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to create folder: ${e.message}")
+            }
+        }
+    }
+
+    fun createFile(name: String) {
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val filePath = if (currentPath == "/") name else "$currentPath/$name"
+                repository.writeFile(serverId, filePath, "")
+                loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to create file: ${e.message}")
+            }
+        }
+    }
+
+    fun renameFile(from: String, to: String) {
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.renameFile(serverId, currentPath, from, to)
+                loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to rename: ${e.message}")
+            }
+        }
+    }
+
+    fun deleteSelected() {
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        val files = _uiState.value.selectedFiles.toList()
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.deleteFiles(serverId, currentPath, files)
+                loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to delete: ${e.message}")
+            }
+        }
+    }
+
+    fun archiveSelected() {
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        val files = _uiState.value.selectedFiles.toList()
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.compressFiles(serverId, currentPath, files)
+                loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to archive: ${e.message}")
+            }
+        }
+    }
+
+    fun unarchiveFile(fileName: String) {
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                repository.decompressFile(serverId, currentPath, fileName)
+                loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to unarchive: ${e.message}")
+            }
+        }
+    }
+
     fun downloadFile(fileName: String) {
         val serverId = serverId ?: return
         val currentPath = _uiState.value.currentPath
@@ -79,13 +192,35 @@ class FileViewModel @Inject constructor(
 
                 val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as android.app.DownloadManager
                 dm.enqueue(request)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true) // Treat download start as success for UI feedback
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(error = "Download failed: ${e.message}")
             }
         }
     }
 
-    fun uploadFile(uri: android.net.Uri) {
+    fun downloadSelected() {
+        // Pterodactyl doesn't support downloading multiple files directly.
+        // We first archive them, then download the archive.
+        val serverId = serverId ?: return
+        val currentPath = _uiState.value.currentPath
+        val files = _uiState.value.selectedFiles.toList()
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val archive = repository.compressFiles(serverId, currentPath, files)
+                // Trigger download of the archive
+                downloadFile(archive.attributes.name)
+                // Reload to show the archive
+                loadFiles(serverId, currentPath)
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Failed to download selected: ${e.message}")
+            }
+        }
+    }
+
+    fun uploadFile(uri: android.net.Uri, andDecompress: Boolean = false) {
         val serverId = serverId ?: return
         val currentPath = _uiState.value.currentPath
 
@@ -99,7 +234,13 @@ class FileViewModel @Inject constructor(
                 contentResolver.openInputStream(uri)?.use { inputStream ->
                     repository.uploadFile(serverId, currentPath, fileName, inputStream, mimeType)
                 }
+
+                if (andDecompress) {
+                    repository.decompressFile(serverId, currentPath, fileName)
+                }
+
                 loadFiles(serverId, currentPath)
+                _uiState.value = _uiState.value.copy(isActionSuccess = true)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = "Upload failed: ${e.message}")
             }
