@@ -29,6 +29,9 @@ object PterodactylModule {
             val request = original.newBuilder()
                 .header("Accept", "application/vnd.pterodactyl.v1+json")
                 .header("Content-Type", "application/json")
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .header("Referer", "https://panel.hexiumnodes.cloud/")
+                .header("Origin", "https://panel.hexiumnodes.cloud")
 
             if (!apiKey.isNullOrBlank()) {
                 val token = if (apiKey.startsWith("Bearer ")) apiKey else "Bearer $apiKey"
