@@ -20,17 +20,19 @@ object PterodactylModule {
     @Singleton
     @Named("PterodactylOkHttp")
     fun providePterodactylOkHttpClient(
+        baseClient: OkHttpClient,
         securePrefs: SecurePreferencesRepository,
-    ): OkHttpClient = OkHttpClient.Builder()
+    ): OkHttpClient = baseClient.newBuilder()
         .addInterceptor { chain ->
             val original = chain.request()
             val apiKey = securePrefs.getApiKey()
             val request = original.newBuilder()
-                .header("Accept", "application/json")
+                .header("Accept", "application/vnd.pterodactyl.v1+json")
                 .header("Content-Type", "application/json")
 
             if (!apiKey.isNullOrBlank()) {
-                request.header("Authorization", "Bearer $apiKey")
+                val token = if (apiKey.startsWith("Bearer ")) apiKey else "Bearer $apiKey"
+                request.header("Authorization", token)
             }
 
             chain.proceed(request.build())
