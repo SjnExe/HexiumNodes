@@ -1,5 +1,6 @@
 package com.hexium.nodes.feature.home.ads
 
+import android.util.DisplayMetrics
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,7 +15,13 @@ fun BannerAd(modifier: Modifier = Modifier) {
         modifier = modifier.fillMaxWidth(),
         factory = { context ->
             AdView(context).apply {
-                setAdSize(AdSize.BANNER)
+                // Determine adaptive ad size
+                val display = context.resources.displayMetrics
+                val widthPixels = display.widthPixels
+                val density = display.density
+                val adWidth = (widthPixels / density).toInt()
+
+                setAdSize(AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(context, adWidth))
                 adUnitId = "ca-app-pub-3940256099942544/6300978111" // Google Test Banner ID
                 loadAd(AdRequest.Builder().build())
             }
