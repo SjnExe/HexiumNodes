@@ -79,7 +79,7 @@ fun FileBrowserScreen(
 
                 // Sort folders first, then files
                 val sortedFiles = remember(files) {
-                    files.sortedWith(compareBy({ !it.attributes.isFile }, { it.attributes.name }))
+                    files.sortedWith(compareBy({ it.attributes.isFile }, { it.attributes.name }))
                 }
 
                 if (sortedFiles.isEmpty()) {

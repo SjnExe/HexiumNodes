@@ -1,6 +1,7 @@
 package com.hexium.nodes.feature.home.server.list
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -19,14 +20,6 @@ fun ServerListScreen(
     viewModel: ServerListViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
-
-    LaunchedEffect(uiState) {
-        val state = uiState
-        if (state is ServerListUiState.Success && state.servers.size == 1 && viewModel.shouldAutoNavigate()) {
-            viewModel.onAutoNavigate()
-            onNavigateToDashboard(state.servers.first().attributes.identifier)
-        }
-    }
 
     Box(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         when (val state = uiState) {
@@ -54,8 +47,7 @@ fun ServerListScreen(
             }
 
             is ServerListUiState.Success -> {
-                // If multiple servers OR single server but already navigated (back pressed)
-                if (state.servers.size > 1 || (state.servers.size == 1 && !viewModel.shouldAutoNavigate())) {
+                if (state.servers.isNotEmpty()) {
                     LazyColumn(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
@@ -65,11 +57,8 @@ fun ServerListScreen(
                             })
                         }
                     }
-                } else if (state.servers.isEmpty()) {
-                    Text("No servers found.", modifier = Modifier.align(Alignment.Center))
                 } else {
-                    // Single server case, pending navigation
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    Text("No servers found.", modifier = Modifier.align(Alignment.Center))
                 }
             }
         }
@@ -83,9 +72,26 @@ fun ServerCard(server: ServerData, onClick: () -> Unit) {
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = server.attributes.name,
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Box(
+                    modifier = Modifier
+                        .size(10.dp)
+                        .background(MaterialTheme.colorScheme.primary, shape = androidx.compose.foundation.shape.CircleShape)
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = server.attributes.name,
-                style = MaterialTheme.typography.titleMedium,
+                text = "ID: ${server.attributes.identifier}",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(

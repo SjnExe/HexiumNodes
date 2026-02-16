@@ -78,7 +78,7 @@ class PterodactylRepositoryImpl @Inject constructor(
 
     override suspend fun createConsoleSession(serverId: String): ConsoleSession {
         val auth = getWebSocketAuth(serverId)
-        return PterodactylConsoleSession(client, auth.socket, auth.token)
+        return PterodactylConsoleSession(client, auth.socket, auth.token, securePrefs)
     }
 
     override fun getApiKey(): String? = securePrefs.getApiKey()
@@ -96,11 +96,22 @@ class PterodactylConsoleSession(
     private val client: OkHttpClient,
     private val socketUrl: String,
     private val token: String,
+    private val securePrefs: SecurePreferencesRepository,
 ) : ConsoleSession {
     private var webSocket: WebSocket? = null
 
     override val incoming: Flow<String> = callbackFlow {
-        val request = Request.Builder().url(socketUrl).build()
+        val cookies = securePrefs.getCookies()
+        val requestBuilder = Request.Builder()
+            .url(socketUrl)
+            .header("User-Agent", com.hexium.nodes.core.common.Constants.USER_AGENT)
+            .header("Origin", "https://panel.hexiumnodes.cloud")
+
+        if (!cookies.isNullOrBlank()) {
+            requestBuilder.header("Cookie", cookies)
+        }
+
+        val request = requestBuilder.build()
         val listener = object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: okhttp3.Response) {
                 this@PterodactylConsoleSession.webSocket = webSocket

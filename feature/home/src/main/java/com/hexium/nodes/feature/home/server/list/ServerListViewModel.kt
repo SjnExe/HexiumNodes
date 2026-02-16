@@ -29,14 +29,6 @@ class ServerListViewModel @Inject constructor(
         loadServers()
     }
 
-    private var hasAutoNavigated = false
-
-    fun onAutoNavigate() {
-        hasAutoNavigated = true
-    }
-
-    fun shouldAutoNavigate(): Boolean = !hasAutoNavigated
-
     fun loadServers() {
         viewModelScope.launch {
             _uiState.value = ServerListUiState.Loading
