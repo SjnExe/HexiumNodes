@@ -1,5 +1,6 @@
 package com.hexium.nodes.data.di
 
+import com.hexium.nodes.core.common.Constants
 import com.hexium.nodes.data.preferences.SecurePreferencesRepository
 import com.hexium.nodes.data.remote.PterodactylService
 import dagger.Module
@@ -29,7 +30,7 @@ object PterodactylModule {
             val request = original.newBuilder()
                 .header("Accept", "application/vnd.pterodactyl.v1+json")
                 .header("Content-Type", "application/json")
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+                .header("User-Agent", Constants.USER_AGENT)
                 .header("Referer", "https://panel.hexiumnodes.cloud/")
                 .header("Origin", "https://panel.hexiumnodes.cloud")
 
