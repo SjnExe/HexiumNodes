@@ -11,6 +11,9 @@ dependencies {
     implementation(libs.spotless.gradlePlugin)
     implementation(libs.compose.compiler.gradlePlugin)
     implementation(libs.hilt.gradlePlugin)
+    implementation(libs.detekt.gradlePlugin)
+    implementation(libs.kover.gradlePlugin)
+    implementation(libs.roborazzi.gradlePlugin)
 }
 
 gradlePlugin {
@@ -34,6 +37,18 @@ gradlePlugin {
         register("spotless") {
             id = "hexium.spotless"
             implementationClass = "SpotlessConventionPlugin"
+        }
+        register("detekt") {
+            id = "hexium.detekt"
+            implementationClass = "DetektConventionPlugin"
+        }
+        register("kover") {
+            id = "hexium.kover"
+            implementationClass = "KoverConventionPlugin"
+        }
+        register("roborazzi") {
+            id = "hexium.roborazzi"
+            implementationClass = "RoborazziConventionPlugin"
         }
     }
 }
