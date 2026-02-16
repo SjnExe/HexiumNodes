@@ -31,8 +31,8 @@ class AppOpenAdManager @Inject constructor(
 
     companion object {
         // Test Ad Unit IDs
-        private const val AD_UNIT_ID_PORTRAIT = "ca-app-pub-3940256099942544/3419835294"
-        private const val AD_UNIT_ID_LANDSCAPE = "ca-app-pub-3940256099942544/5662855259"
+        private const val AD_UNIT_ID_PORTRAIT = "ca-app-pub-3940256099942544/9257395921"
+        private const val AD_UNIT_ID_LANDSCAPE = "ca-app-pub-3940256099942544/9257395921"
         private const val TAG = "AppOpenAdManager"
     }
 
