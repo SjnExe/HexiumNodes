@@ -70,17 +70,17 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
                                 },
-                                onLogout = {
-                                    navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true }
-                                    }
-                                },
                             )
                         }
                         composable("home") {
                             MainScreen(
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
+                                },
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
                                 },
                             )
                         }
