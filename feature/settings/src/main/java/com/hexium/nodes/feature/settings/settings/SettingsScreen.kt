@@ -178,6 +178,20 @@ fun SettingsScreen(
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 ListItem(headlineContent = { Text(stringResource(R.string.developer_options), color = MaterialTheme.colorScheme.primary) })
 
+                // Pterodactyl API Key
+                var apiKey by remember(uiState.pterodactylApiKey) { mutableStateOf(uiState.pterodactylApiKey ?: "") }
+                OutlinedTextField(
+                    value = apiKey,
+                    onValueChange = {
+                        apiKey = it
+                        viewModel.updateApiKey(it)
+                    },
+                    label = { Text("Pterodactyl API Key") },
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    singleLine = true,
+                )
+
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.open_network_inspector)) },
                     modifier = Modifier.clickable {

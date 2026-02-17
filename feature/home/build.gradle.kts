@@ -13,6 +13,7 @@ dependencies {
     implementation(project(":core:common"))
     implementation(project(":core:ui"))
     implementation(project(":data"))
+    implementation(project(":core:model")) // Explicitly depend on model
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -27,4 +28,6 @@ dependencies {
 
     // Ads
     implementation(libs.play.services.ads)
+
+    implementation(libs.gson)
 }

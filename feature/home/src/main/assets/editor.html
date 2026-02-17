@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Editor</title>
+<style type="text/css" media="screen">
+    body {
+        overflow: hidden;
+        margin: 0;
+        background-color: #272822; /* Monokai background */
+    }
+    #editor {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        font-size: 14px;
+    }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ace/1.32.3/ace.js"></script>
+</head>
+<body>
+
+<div id="editor"></div>
+
+<script>
+    var editor = ace.edit("editor");
+    editor.setTheme("ace/theme/monokai");
+    editor.session.setMode("ace/mode/text"); // Default
+    editor.setShowPrintMargin(false);
+    editor.setOptions({
+        fontSize: "14px",
+        wrap: true,
+        useWorker: false // Disable web worker to avoid file URI issues
+    });
+
+    function setContent(content, filePath) {
+        editor.setValue(content, -1); // -1 moves cursor to start
+
+        // Auto-detect mode based on extension
+        var modelist = ace.require("ace/ext/modelist");
+        if(modelist) {
+            var mode = modelist.getModeForPath(filePath).mode;
+            editor.session.setMode(mode);
+        }
+    }
+
+    function getContent() {
+        return editor.getValue();
+    }
+
+    // Notify Android when ready
+    if (window.Android) {
+        window.Android.onEditorReady();
+    }
+</script>
+</body>
+</html>
