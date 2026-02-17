@@ -236,7 +236,8 @@ fun FileItem(
             val date = try {
                 file.attributes.modifiedAt.substring(0, 10)
             } catch (e: Exception) { "" }
-            Text(file.attributes.mode + " | " + formatSize(file.attributes.size) + " | " + date)
+            val sizeText = if (file.attributes.isFile) " | ${formatSize(file.attributes.size)}" else ""
+            Text(file.attributes.mode + sizeText + " | " + date)
         },
         trailingContent = {
             if (!selectionMode) {
@@ -312,7 +313,11 @@ fun FileItem(
             text = {
                 Column {
                     Text("Name: ${file.attributes.name}")
-                    Text("Size: ${formatSize(file.attributes.size)}")
+                    if (file.attributes.isFile) {
+                        Text("Size: ${formatSize(file.attributes.size)}")
+                    } else {
+                        Text("Type: Directory")
+                    }
                     Text("Mode: ${file.attributes.mode}")
                     Text("Created: ${file.attributes.createdAt}")
                     Text("Modified: ${file.attributes.modifiedAt}")

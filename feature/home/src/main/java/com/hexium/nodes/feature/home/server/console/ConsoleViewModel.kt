@@ -52,8 +52,8 @@ class ConsoleViewModel @Inject constructor(
             val event = gson.fromJson(json, ConsoleEvent::class.java)
             if (event.event == "console output") {
                 event.args?.firstOrNull()?.let { log ->
-                    // Strip ANSI codes
-                    val cleanLog = log.replace(Regex("\u001B\\[[;\\d]*m"), "")
+                    // Strip ANSI codes (colors, cursor movements, etc.)
+                    val cleanLog = log.replace(Regex("\u001B\\[[;?0-9]*[a-zA-Z]"), "")
                     appendLog(cleanLog)
                 }
             }

@@ -29,7 +29,6 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SettingsScreen(
     onNavigateBack: () -> Unit,
-    onLogout: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -58,56 +57,6 @@ fun SettingsScreen(
         },
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues).fillMaxSize()) {
-            // User Profile Section (Redesigned)
-            if (uiState.isLoggedIn) {
-                Card(
-                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Surface(
-                            shape = androidx.compose.foundation.shape.CircleShape,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp),
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Text(
-                                    text = (uiState.username?.firstOrNull() ?: '?').toString().uppercase(),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                )
-                            }
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = uiState.username ?: stringResource(R.string.user),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                            )
-                            Text(
-                                text = uiState.email ?: stringResource(R.string.no_email),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        IconButton(onClick = {
-                            viewModel.logout()
-                            onLogout()
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = stringResource(R.string.logout),
-                                tint = MaterialTheme.colorScheme.error,
-                            )
-                        }
-                    }
-                }
-            }
-
             // Theme Selection (Chips style)
             Text(
                 text = stringResource(R.string.theme),

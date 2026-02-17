@@ -68,9 +68,13 @@ fun ServerDashboardScreen(
                         Text("Resources", style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(8.dp))
 
-                        ResourceItem("Memory", "${resources.resources.memoryBytes / 1024 / 1024} MB / ${server.limits.memory} MB")
-                        ResourceItem("CPU", "${String.format("%.2f", resources.resources.cpuAbsolute)}% / ${server.limits.cpu}%")
-                        ResourceItem("Disk", "${resources.resources.diskBytes / 1024 / 1024} MB / ${server.limits.disk} MB")
+                        val memoryLimit = if (server.limits.memory == 0L) "∞" else "${server.limits.memory} MB"
+                        val diskLimit = if (server.limits.disk == 0L) "∞" else "${server.limits.disk} MB"
+                        val cpuLimit = if (server.limits.cpu == 0L) "∞" else "${server.limits.cpu}%"
+
+                        ResourceItem("Memory", "${resources.resources.memoryBytes / 1024 / 1024} MB / $memoryLimit")
+                        ResourceItem("CPU", "${String.format("%.2f", resources.resources.cpuAbsolute)}% / $cpuLimit")
+                        ResourceItem("Disk", "${resources.resources.diskBytes / 1024 / 1024} MB / $diskLimit")
                     }
 
                     Spacer(modifier = Modifier.height(24.dp))

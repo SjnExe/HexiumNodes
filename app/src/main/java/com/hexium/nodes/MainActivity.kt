@@ -58,6 +58,11 @@ class MainActivity : ComponentActivity() {
                                 onNavigateToSettings = {
                                     navController.navigate("settings")
                                 },
+                                onLogout = {
+                                    navController.navigate("login") {
+                                        popUpTo("home") { inclusive = true }
+                                    }
+                                },
                             )
                         }
                         composable("login") {
@@ -83,11 +88,6 @@ class MainActivity : ComponentActivity() {
                             SettingsScreen(
                                 onNavigateBack = {
                                     navController.popBackStack()
-                                },
-                                onLogout = {
-                                    navController.navigate("login") {
-                                        popUpTo("home") { inclusive = true }
-                                    }
                                 },
                             )
                         }
