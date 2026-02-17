@@ -38,6 +38,12 @@ interface PterodactylRepository {
     suspend fun decompressFile(serverId: String, root: String, file: String)
     suspend fun createFolder(serverId: String, root: String, name: String)
 
+    suspend fun getBackups(serverId: String): List<BackupData>
+    suspend fun createBackup(serverId: String): BackupData
+    suspend fun getAllocations(serverId: String): List<AllocationData>
+    suspend fun getUsers(serverId: String): List<SubUserData>
+    suspend fun getStartupVariables(serverId: String): List<StartupVariableData>
+
     suspend fun createConsoleSession(serverId: String): ConsoleSession
 
     fun getApiKey(): String?
@@ -100,6 +106,16 @@ class PterodactylRepositoryImpl @Inject constructor(
     override suspend fun createFolder(serverId: String, root: String, name: String) {
         service.createFolder(serverId, CreateFolderRequest(root, name))
     }
+
+    override suspend fun getBackups(serverId: String): List<BackupData> = service.getBackups(serverId).data
+
+    override suspend fun createBackup(serverId: String): BackupData = service.createBackup(serverId)
+
+    override suspend fun getAllocations(serverId: String): List<AllocationData> = service.getAllocations(serverId).data
+
+    override suspend fun getUsers(serverId: String): List<SubUserData> = service.getUsers(serverId).data
+
+    override suspend fun getStartupVariables(serverId: String): List<StartupVariableData> = service.getStartupVariables(serverId).data
 
     override suspend fun createConsoleSession(serverId: String): ConsoleSession {
         val auth = getWebSocketAuth(serverId)

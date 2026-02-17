@@ -15,6 +15,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.feature.home.server.console.ConsoleScreen
 import com.hexium.nodes.feature.home.server.dashboard.ServerDashboardScreen
 import com.hexium.nodes.feature.home.server.files.FileBrowserScreen
+import com.hexium.nodes.feature.home.server.backups.BackupScreen
+import com.hexium.nodes.feature.home.server.network.NetworkScreen
+import com.hexium.nodes.feature.home.server.users.UsersScreen
+import com.hexium.nodes.feature.home.server.startup.StartupScreen
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,20 +64,41 @@ fun PanelScreen(
 
                         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
-                        // Placeholders
+                        NavigationDrawerItem(
+                            label = { Text("Backups") },
+                            icon = { Icon(Icons.Default.Backup, null) },
+                            selected = currentScreen == PanelScreenType.BACKUPS,
+                            onClick = { viewModel.navigateTo(PanelScreenType.BACKUPS); scope.launch { drawerState.close() } }
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Network") },
+                            icon = { Icon(Icons.Default.NetworkCheck, null) },
+                            selected = currentScreen == PanelScreenType.NETWORK,
+                            onClick = { viewModel.navigateTo(PanelScreenType.NETWORK); scope.launch { drawerState.close() } }
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Users") },
+                            icon = { Icon(Icons.Default.Group, null) },
+                            selected = currentScreen == PanelScreenType.USERS,
+                            onClick = { viewModel.navigateTo(PanelScreenType.USERS); scope.launch { drawerState.close() } }
+                        )
+                        NavigationDrawerItem(
+                            label = { Text("Startup") },
+                            icon = { Icon(Icons.Default.PlayArrow, null) },
+                            selected = currentScreen == PanelScreenType.STARTUP,
+                            onClick = { viewModel.navigateTo(PanelScreenType.STARTUP); scope.launch { drawerState.close() } }
+                        )
+
+                        // Placeholders for remaining items
                         listOf(
                             "Settings" to Icons.Default.Settings,
                             "Activity" to Icons.Default.History,
                             "Players" to Icons.Default.Person,
                             "Databases" to Icons.Default.Storage,
-                            "Backups" to Icons.Default.Backup,
-                            "Network" to Icons.Default.NetworkCheck,
                             "Plugins" to Icons.Default.Extension,
                             "Subdomains" to Icons.Default.Dns,
                             "Importer" to Icons.Default.ImportExport,
                             "Schedules" to Icons.Default.Schedule,
-                            "Users" to Icons.Default.Group,
-                            "Startup" to Icons.Default.PlayArrow,
                             "Versions" to Icons.Default.Update,
                             "Properties" to Icons.Default.Tune
                         ).forEach { (name, icon) ->
@@ -117,10 +142,12 @@ fun PanelScreen(
                      when (currentScreen) {
                          PanelScreenType.DASHBOARD -> ServerDashboardScreen(
                              serverId = serverId,
-                             onNavigateToConsole = { viewModel.navigateTo(PanelScreenType.CONSOLE) },
-                             onNavigateToFiles = { viewModel.navigateTo(PanelScreenType.FILES) }
                          )
                          PanelScreenType.CONSOLE -> ConsoleScreen(serverId = serverId)
+                         PanelScreenType.BACKUPS -> BackupScreen(serverId = serverId)
+                         PanelScreenType.NETWORK -> NetworkScreen(serverId = serverId)
+                         PanelScreenType.USERS -> UsersScreen(serverId = serverId)
+                         PanelScreenType.STARTUP -> StartupScreen(serverId = serverId)
                          else -> Text("Coming Soon", modifier = Modifier.padding(16.dp))
                      }
                 }
