@@ -50,4 +50,25 @@ interface PterodactylService {
 
     @POST("api/client/servers/{id}/files/create-folder")
     suspend fun createFolder(@Path("id") serverId: String, @Body request: CreateFolderRequest)
+
+    // New Endpoints for Panel Features
+
+    // Backups
+    @GET("api/client/servers/{id}/backups")
+    suspend fun getBackups(@Path("id") serverId: String): BackupListResponse
+
+    @POST("api/client/servers/{id}/backups")
+    suspend fun createBackup(@Path("id") serverId: String): BackupData
+
+    // Network
+    @GET("api/client/servers/{id}/network/allocations")
+    suspend fun getAllocations(@Path("id") serverId: String): AllocationListResponse
+
+    // Users
+    @GET("api/client/servers/{id}/users")
+    suspend fun getUsers(@Path("id") serverId: String): UserListResponse
+
+    // Startup
+    @GET("api/client/servers/{id}/startup")
+    suspend fun getStartupVariables(@Path("id") serverId: String): StartupResponse
 }

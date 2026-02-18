@@ -18,10 +18,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.core.common.Constants
 import com.hexium.nodes.data.preferences.SecurePreferencesRepository
 import kotlinx.coroutines.launch
@@ -33,6 +34,12 @@ fun CloudflareVerificationScreen(
     onSuccess: () -> Unit,
     viewModel: CloudflareViewModel = hiltViewModel()
 ) {
+    LaunchedEffect(Unit) {
+        // Clear all cookies to ensure a fresh session and prevent 403 loops from stale cookies
+        CookieManager.getInstance().removeAllCookies(null)
+        CookieManager.getInstance().flush()
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,7 +82,9 @@ fun CloudflareWebView(
                     override fun onPageFinished(view: WebView?, url: String?) {
                         super.onPageFinished(view, url)
                         val cookies = CookieManager.getInstance().getCookie(url)
-                        if (cookies != null && cookies.contains("cf_clearance")) {
+                        // Ensure we have a valid cookie string and specifically look for cf_clearance if possible
+                        // However, checking for non-null/non-empty is a good start after clearing.
+                        if (!cookies.isNullOrBlank() && cookies.contains("cf_clearance")) {
                             onCookiesDetected(cookies)
                         }
                     }
