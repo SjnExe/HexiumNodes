@@ -42,7 +42,7 @@ data class AllocationAttributes(
 )
 
 data class AllocationNoteRequest(
-    @SerializedName("notes") val notes: String
+    @SerializedName("notes") val notes: String,
 )
 
 // Users
@@ -86,20 +86,20 @@ data class StartupVariableAttributes(
 
 // Subdomains
 data class SubdomainListResponse(
-    @SerializedName("data") val data: List<SubdomainData>
+    @SerializedName("data") val data: List<SubdomainData>,
 )
 
 data class SubdomainData(
     @SerializedName("object") val objectType: String,
-    @SerializedName("attributes") val attributes: SubdomainAttributes
+    @SerializedName("attributes") val attributes: SubdomainAttributes,
 )
 
 data class SubdomainAttributes(
     @SerializedName("id") val id: Int,
     @SerializedName("domain") val domain: String,
-    @SerializedName("created_at") val createdAt: String
+    @SerializedName("created_at") val createdAt: String,
 )
 
 data class CreateSubdomainRequest(
-    @SerializedName("domain") val domain: String
+    @SerializedName("domain") val domain: String,
 )

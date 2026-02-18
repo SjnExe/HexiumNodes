@@ -105,9 +105,7 @@ class PterodactylRepositoryImpl @Inject constructor(
         service.deleteFiles(serverId, DeleteFilesRequest(root, files))
     }
 
-    override suspend fun compressFiles(serverId: String, root: String, files: List<String>): FileData {
-        return service.compressFiles(serverId, CompressFilesRequest(root, files))
-    }
+    override suspend fun compressFiles(serverId: String, root: String, files: List<String>): FileData = service.compressFiles(serverId, CompressFilesRequest(root, files))
 
     override suspend fun decompressFile(serverId: String, root: String, file: String) {
         service.decompressFile(serverId, DecompressFileRequest(root, file))
@@ -125,9 +123,7 @@ class PterodactylRepositoryImpl @Inject constructor(
         service.deleteBackup(serverId, uuid)
     }
 
-    override suspend fun getBackupDownloadUrl(serverId: String, uuid: String): String {
-        return service.getBackupDownloadUrl(serverId, uuid).attributes.url
-    }
+    override suspend fun getBackupDownloadUrl(serverId: String, uuid: String): String = service.getBackupDownloadUrl(serverId, uuid).attributes.url
 
     override suspend fun getAllocations(serverId: String): List<AllocationData> = service.getAllocations(serverId).data
 
@@ -137,15 +133,11 @@ class PterodactylRepositoryImpl @Inject constructor(
         service.deleteAllocation(serverId, allocationId)
     }
 
-    override suspend fun updateAllocationNote(serverId: String, allocationId: Int, notes: String): AllocationData {
-        return service.updateAllocationNote(serverId, allocationId, AllocationNoteRequest(notes))
-    }
+    override suspend fun updateAllocationNote(serverId: String, allocationId: Int, notes: String): AllocationData = service.updateAllocationNote(serverId, allocationId, AllocationNoteRequest(notes))
 
     override suspend fun getSubdomains(serverId: String): List<SubdomainData> = service.getSubdomains(serverId).data
 
-    override suspend fun createSubdomain(serverId: String, domain: String): SubdomainData {
-        return service.createSubdomain(serverId, CreateSubdomainRequest(domain))
-    }
+    override suspend fun createSubdomain(serverId: String, domain: String): SubdomainData = service.createSubdomain(serverId, CreateSubdomainRequest(domain))
 
     override suspend fun deleteSubdomain(serverId: String, subdomainId: Int) {
         service.deleteSubdomain(serverId, subdomainId)

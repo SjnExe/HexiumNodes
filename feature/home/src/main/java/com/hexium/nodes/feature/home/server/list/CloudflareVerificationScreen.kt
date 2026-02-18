@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
 fun CloudflareVerificationScreen(
     onNavigateBack: () -> Unit,
     onSuccess: () -> Unit,
-    viewModel: CloudflareViewModel = hiltViewModel()
+    viewModel: CloudflareViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(Unit) {
         // Clear all cookies to ensure a fresh session and prevent 403 loops from stale cookies
@@ -48,10 +48,10 @@ fun CloudflareVerificationScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
             )
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             CloudflareWebView(
@@ -59,7 +59,7 @@ fun CloudflareVerificationScreen(
                 onCookiesDetected = { cookies ->
                     viewModel.saveCookies(cookies)
                     onSuccess()
-                }
+                },
             )
         }
     }
@@ -69,7 +69,7 @@ fun CloudflareVerificationScreen(
 @Composable
 fun CloudflareWebView(
     url: String,
-    onCookiesDetected: (String) -> Unit
+    onCookiesDetected: (String) -> Unit,
 ) {
     AndroidView(
         factory = { context ->
@@ -93,6 +93,6 @@ fun CloudflareWebView(
             }
             webView
         },
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
     )
 }

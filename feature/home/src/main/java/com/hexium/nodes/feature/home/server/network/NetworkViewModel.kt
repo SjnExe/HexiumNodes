@@ -17,12 +17,13 @@ data class NetworkUiState(
     val subdomains: List<SubdomainData> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val selectedTab: Int = 0 // 0 for Ports, 1 for Subdomains
+    // 0 for Ports, 1 for Subdomains
+    val selectedTab: Int = 0,
 )
 
 @HiltViewModel
 class NetworkViewModel @Inject constructor(
-    private val repository: PterodactylRepository
+    private val repository: PterodactylRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(NetworkUiState())
     val uiState: StateFlow<NetworkUiState> = _uiState.asStateFlow()
@@ -50,11 +51,11 @@ class NetworkViewModel @Inject constructor(
                 // Don't overwrite the error if allocations failed too, just append or log?
                 // For now, if allocations worked but subdomains failed, maybe just show empty subdomains?
                 // Or update error message?
-                 val currentError = _uiState.value.error
-                 if (currentError == null) {
+                val currentError = _uiState.value.error
+                if (currentError == null) {
                     // Only show error if no other error exists, or maybe ignore 404?
                     // _uiState.value = _uiState.value.copy(error = "Failed to load subdomains: ${e.message}")
-                 }
+                }
             }
 
             _uiState.value = _uiState.value.copy(isLoading = false)
@@ -63,7 +64,7 @@ class NetworkViewModel @Inject constructor(
 
     fun createAllocation(serverId: String) {
         viewModelScope.launch {
-             try {
+            try {
                 repository.createAllocation(serverId)
                 loadData(serverId)
             } catch (e: Exception) {
@@ -73,8 +74,8 @@ class NetworkViewModel @Inject constructor(
     }
 
     fun deleteAllocation(serverId: String, allocationId: Int) {
-         viewModelScope.launch {
-             try {
+        viewModelScope.launch {
+            try {
                 repository.deleteAllocation(serverId, allocationId)
                 loadData(serverId)
             } catch (e: Exception) {
@@ -84,8 +85,8 @@ class NetworkViewModel @Inject constructor(
     }
 
     fun updateAllocationNote(serverId: String, allocationId: Int, notes: String) {
-         viewModelScope.launch {
-             try {
+        viewModelScope.launch {
+            try {
                 repository.updateAllocationNote(serverId, allocationId, notes)
                 loadData(serverId)
             } catch (e: Exception) {
@@ -96,7 +97,7 @@ class NetworkViewModel @Inject constructor(
 
     fun createSubdomain(serverId: String, domain: String) {
         viewModelScope.launch {
-             try {
+            try {
                 repository.createSubdomain(serverId, domain)
                 loadData(serverId)
             } catch (e: Exception) {
@@ -107,7 +108,7 @@ class NetworkViewModel @Inject constructor(
 
     fun deleteSubdomain(serverId: String, subdomainId: Int) {
         viewModelScope.launch {
-             try {
+            try {
                 repository.deleteSubdomain(serverId, subdomainId)
                 loadData(serverId)
             } catch (e: Exception) {

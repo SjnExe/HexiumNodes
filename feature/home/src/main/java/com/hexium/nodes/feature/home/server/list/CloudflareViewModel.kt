@@ -8,7 +8,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class CloudflareViewModel @Inject constructor(
-    private val securePrefs: SecurePreferencesRepository
+    private val securePrefs: SecurePreferencesRepository,
 ) : ViewModel() {
 
     fun saveCookies(cookies: String) {

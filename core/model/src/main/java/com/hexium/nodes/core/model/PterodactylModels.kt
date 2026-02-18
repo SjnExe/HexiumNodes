@@ -126,42 +126,42 @@ data class DownloadUrlAttributes(
 
 // Upload
 data class UploadUrlResponse(
-    @SerializedName("attributes") val attributes: UploadUrlAttributes
+    @SerializedName("attributes") val attributes: UploadUrlAttributes,
 )
 
 data class UploadUrlAttributes(
-    @SerializedName("url") val url: String
+    @SerializedName("url") val url: String,
 )
 
 // File Operations Requests
 data class RenameFileRequest(
     @SerializedName("root") val root: String,
-    @SerializedName("files") val files: List<RenameFileEntry>
+    @SerializedName("files") val files: List<RenameFileEntry>,
 )
 
 data class RenameFileEntry(
     @SerializedName("from") val from: String,
-    @SerializedName("to") val to: String
+    @SerializedName("to") val to: String,
 )
 
 data class DeleteFilesRequest(
     @SerializedName("root") val root: String,
-    @SerializedName("files") val files: List<String>
+    @SerializedName("files") val files: List<String>,
 )
 
 data class CompressFilesRequest(
     @SerializedName("root") val root: String,
-    @SerializedName("files") val files: List<String>
+    @SerializedName("files") val files: List<String>,
 )
 
 data class DecompressFileRequest(
     @SerializedName("root") val root: String,
-    @SerializedName("file") val file: String
+    @SerializedName("file") val file: String,
 )
 
 data class CreateFolderRequest(
     @SerializedName("root") val root: String,
-    @SerializedName("name") val name: String
+    @SerializedName("name") val name: String,
 )
 
 // WebSocket Auth

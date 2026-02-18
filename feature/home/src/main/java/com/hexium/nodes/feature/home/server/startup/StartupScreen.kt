@@ -17,7 +17,7 @@ import com.hexium.nodes.core.model.StartupVariableAttributes
 @Composable
 fun StartupScreen(
     serverId: String,
-    viewModel: StartupViewModel = hiltViewModel()
+    viewModel: StartupViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -54,7 +54,7 @@ fun StartupVariableItem(variable: StartupVariableAttributes) {
             onValueChange = {}, // Read-only for now
             label = { Text(variable.envVariable) },
             enabled = variable.isEditable,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }

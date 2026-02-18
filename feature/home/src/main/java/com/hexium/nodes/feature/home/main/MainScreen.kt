@@ -24,8 +24,8 @@ import com.hexium.nodes.core.ui.R
 import com.hexium.nodes.feature.home.AdRewardsScreen
 import com.hexium.nodes.feature.home.account.AccountScreen
 import com.hexium.nodes.feature.home.server.files.FileEditorScreen
-import com.hexium.nodes.feature.home.server.list.ServerListScreen
 import com.hexium.nodes.feature.home.server.list.CloudflareVerificationScreen
+import com.hexium.nodes.feature.home.server.list.ServerListScreen
 import com.hexium.nodes.feature.home.server.panel.PanelScreen
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -47,8 +47,8 @@ fun MainScreen(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
     val isPanel = currentRoute?.startsWith("server_panel") == true ||
-                  currentRoute?.startsWith("server_file_editor") == true ||
-                  currentRoute == "cloudflare_verification"
+        currentRoute?.startsWith("server_file_editor") == true ||
+        currentRoute == "cloudflare_verification"
 
     Scaffold(
         topBar = {
@@ -104,13 +104,13 @@ fun MainScreen(
                         },
                         onNavigateToCloudflare = {
                             navController.navigate("cloudflare_verification")
-                        }
+                        },
                     )
                 }
                 composable("cloudflare_verification") {
                     CloudflareVerificationScreen(
                         onNavigateBack = { navController.popBackStack() },
-                        onSuccess = { navController.popBackStack() }
+                        onSuccess = { navController.popBackStack() },
                     )
                 }
                 composable("server_panel/{serverId}") { backStackEntry ->
@@ -121,7 +121,7 @@ fun MainScreen(
                         onOpenFile = { path ->
                             val encodedPath = URLEncoder.encode(path, StandardCharsets.UTF_8.toString())
                             navController.navigate("server_file_editor/$serverId?path=$encodedPath")
-                        }
+                        },
                     )
                 }
 

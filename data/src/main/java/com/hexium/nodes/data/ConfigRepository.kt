@@ -33,7 +33,7 @@ class ConfigRepository @Inject constructor(
                 devAdDelaySeconds = settings.cachedAdDelaySeconds,
                 maintenance = settings.cachedMaintenance,
                 minVersion = settings.cachedMinVersion,
-                testUsers = testUsers
+                testUsers = testUsers,
             )
         }
 

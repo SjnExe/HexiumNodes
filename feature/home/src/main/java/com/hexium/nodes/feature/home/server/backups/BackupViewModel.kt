@@ -15,12 +15,12 @@ data class BackupUiState(
     val backups: List<BackupData> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val downloadUrl: String? = null
+    val downloadUrl: String? = null,
 )
 
 @HiltViewModel
 class BackupViewModel @Inject constructor(
-    private val repository: PterodactylRepository
+    private val repository: PterodactylRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(BackupUiState())
     val uiState: StateFlow<BackupUiState> = _uiState.asStateFlow()

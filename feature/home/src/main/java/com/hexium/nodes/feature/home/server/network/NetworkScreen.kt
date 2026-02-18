@@ -9,9 +9,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.hexium.nodes.core.model.AllocationAttributes
@@ -20,7 +20,7 @@ import com.hexium.nodes.core.model.SubdomainAttributes
 @Composable
 fun NetworkScreen(
     serverId: String,
-    viewModel: NetworkViewModel = hiltViewModel()
+    viewModel: NetworkViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -59,19 +59,19 @@ fun NetworkScreen(
                     Icon(Icons.Default.Add, contentDescription = "New Subdomain")
                 }
             }
-        }
+        },
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            TabRow(selectedTabIndex = uiState.selectedTab) {
+            PrimaryTabRow(selectedTabIndex = uiState.selectedTab) {
                 Tab(
                     selected = uiState.selectedTab == 0,
                     onClick = { viewModel.selectTab(0) },
-                    text = { Text("Ports") }
+                    text = { Text("Ports") },
                 )
                 Tab(
                     selected = uiState.selectedTab == 1,
                     onClick = { viewModel.selectTab(1) },
-                    text = { Text("Subdomains") }
+                    text = { Text("Subdomains") },
                 )
             }
 
@@ -88,12 +88,12 @@ fun NetworkScreen(
                     PortsList(
                         allocations = uiState.allocations.map { it.attributes },
                         onEditNote = { showEditNoteDialog = it },
-                        onDelete = { showDeleteAllocationDialog = it }
+                        onDelete = { showDeleteAllocationDialog = it },
                     )
                 } else {
                     SubdomainsList(
                         subdomains = uiState.subdomains.map { it.attributes },
-                        onDelete = { showDeleteSubdomainDialog = it }
+                        onDelete = { showDeleteSubdomainDialog = it },
                     )
                 }
             }
@@ -114,7 +114,7 @@ fun NetworkScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showCreateAllocationDialog = false }) { Text("Cancel") }
-            }
+            },
         )
     }
 
@@ -132,7 +132,7 @@ fun NetworkScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showEditNoteDialog = null }) { Text("Cancel") }
-            }
+            },
         )
     }
 
@@ -149,7 +149,7 @@ fun NetworkScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteAllocationDialog = null }) { Text("Cancel") }
-            }
+            },
         )
     }
 
@@ -167,7 +167,7 @@ fun NetworkScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showCreateSubdomainDialog = false }) { Text("Cancel") }
-            }
+            },
         )
     }
 
@@ -184,7 +184,7 @@ fun NetworkScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showDeleteSubdomainDialog = null }) { Text("Cancel") }
-            }
+            },
         )
     }
 }
@@ -193,7 +193,7 @@ fun NetworkScreen(
 fun PortsList(
     allocations: List<AllocationAttributes>,
     onEditNote: (AllocationAttributes) -> Unit,
-    onDelete: (AllocationAttributes) -> Unit
+    onDelete: (AllocationAttributes) -> Unit,
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         items(allocations) { allocation ->
@@ -213,10 +213,10 @@ fun PortsList(
                                 Icon(Icons.Default.Delete, contentDescription = "Delete")
                             }
                         } else {
-                             Badge { Text("Primary") }
+                            Badge { Text("Primary") }
                         }
                     }
-                }
+                },
             )
             HorizontalDivider()
         }
@@ -226,7 +226,7 @@ fun PortsList(
 @Composable
 fun SubdomainsList(
     subdomains: List<SubdomainAttributes>,
-    onDelete: (SubdomainAttributes) -> Unit
+    onDelete: (SubdomainAttributes) -> Unit,
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         items(subdomains) { subdomain ->
@@ -237,7 +237,7 @@ fun SubdomainsList(
                     IconButton(onClick = { onDelete(subdomain) }) {
                         Icon(Icons.Default.Delete, contentDescription = "Delete")
                     }
-                }
+                },
             )
             HorizontalDivider()
         }

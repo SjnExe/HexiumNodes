@@ -10,14 +10,15 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -72,7 +73,7 @@ fun BackupScreen(
                         BackupItem(
                             backup = backup.attributes,
                             onDownload = { viewModel.downloadBackup(serverId, backup.attributes.uuid) },
-                            onDelete = { viewModel.deleteBackup(serverId, backup.attributes.uuid) }
+                            onDelete = { viewModel.deleteBackup(serverId, backup.attributes.uuid) },
                         )
                         HorizontalDivider()
                     }
@@ -82,7 +83,7 @@ fun BackupScreen(
 
         FloatingActionButton(
             onClick = { viewModel.createBackup(serverId) },
-            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)
+            modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
         ) {
             Icon(Icons.Default.Add, contentDescription = "Create Backup")
         }
@@ -93,7 +94,7 @@ fun BackupScreen(
 fun BackupItem(
     backup: BackupAttributes,
     onDownload: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
 ) {
     ListItem(
         headlineContent = { Text(backup.name) },
@@ -116,6 +117,6 @@ fun BackupItem(
                     Icon(Icons.Default.Delete, contentDescription = "Delete")
                 }
             }
-        }
+        },
     )
 }

@@ -41,12 +41,12 @@ fun ServerDashboardScreen(
             if (server != null) {
                 Column(
                     modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     // Header Card
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text(text = server.name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -61,7 +61,7 @@ fun ServerDashboardScreen(
                                     } else {
                                         Icon(Icons.Default.Stop, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                                     }
-                                }
+                                },
                             )
                         }
                     }
@@ -70,11 +70,11 @@ fun ServerDashboardScreen(
                     Text("Power Controls", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         FilledTonalButton(
                             onClick = { viewModel.sendPowerSignal(PowerSignal.START) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         ) {
                             Icon(Icons.Default.PlayArrow, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
@@ -82,7 +82,7 @@ fun ServerDashboardScreen(
                         }
                         FilledTonalButton(
                             onClick = { viewModel.sendPowerSignal(PowerSignal.RESTART) },
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
@@ -91,12 +91,12 @@ fun ServerDashboardScreen(
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         Button(
                             onClick = { viewModel.sendPowerSignal(PowerSignal.STOP) },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         ) {
                             Icon(Icons.Default.Stop, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
@@ -105,7 +105,7 @@ fun ServerDashboardScreen(
                         Button(
                             onClick = { viewModel.sendPowerSignal(PowerSignal.KILL) },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer),
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
                         ) {
                             Icon(Icons.Default.Bolt, contentDescription = null)
                             Spacer(modifier = Modifier.width(4.dp))
@@ -126,21 +126,21 @@ fun ServerDashboardScreen(
                             label = "Memory",
                             value = "${resources.resources.memoryBytes / 1024 / 1024} MB",
                             limit = memoryLimit,
-                            progress = if (server.limits.memory > 0) (resources.resources.memoryBytes / 1024 / 1024).toFloat() / server.limits.memory else 0f
+                            progress = if (server.limits.memory > 0) (resources.resources.memoryBytes / 1024 / 1024).toFloat() / server.limits.memory else 0f,
                         )
                         ResourceCard(
                             icon = Icons.Default.Speed,
                             label = "CPU",
                             value = "${String.format("%.2f", resources.resources.cpuAbsolute)}%",
                             limit = cpuLimit,
-                            progress = if (server.limits.cpu > 0) resources.resources.cpuAbsolute.toFloat() / server.limits.cpu else 0f
+                            progress = if (server.limits.cpu > 0) resources.resources.cpuAbsolute.toFloat() / server.limits.cpu else 0f,
                         )
                         ResourceCard(
                             icon = Icons.Default.SdStorage,
                             label = "Disk",
                             value = "${resources.resources.diskBytes / 1024 / 1024} MB",
                             limit = diskLimit,
-                            progress = if (server.limits.disk > 0) (resources.resources.diskBytes / 1024 / 1024).toFloat() / server.limits.disk else 0f
+                            progress = if (server.limits.disk > 0) (resources.resources.diskBytes / 1024 / 1024).toFloat() / server.limits.disk else 0f,
                         )
                     }
                 }
@@ -153,11 +153,11 @@ fun ServerDashboardScreen(
 fun ResourceCard(icon: ImageVector, label: String, value: String, limit: String, progress: Float) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
             Spacer(modifier = Modifier.width(16.dp))

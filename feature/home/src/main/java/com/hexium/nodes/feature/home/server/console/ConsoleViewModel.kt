@@ -58,6 +58,7 @@ class ConsoleViewModel @Inject constructor(
                         appendLog(cleanLog)
                     }
                 }
+
                 "jwt error" -> {
                     _uiState.value = _uiState.value.copy(error = "Authentication failed")
                 }

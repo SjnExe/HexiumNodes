@@ -14,12 +14,12 @@ import javax.inject.Inject
 data class StartupUiState(
     val variables: List<StartupVariableData> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
 class StartupViewModel @Inject constructor(
-    private val repository: PterodactylRepository
+    private val repository: PterodactylRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(StartupUiState())
     val uiState: StateFlow<StartupUiState> = _uiState.asStateFlow()
