@@ -32,6 +32,10 @@ data class SettingsData(
     val cachedAdRate: Double,
     val cachedAdExpiry: Int,
     val cachedAdDelaySeconds: Long,
+    val lastConfigFetchTime: Long,
+    val cachedMaintenance: Boolean,
+    val cachedMinVersion: Int,
+    val cachedTestUsersJson: String,
 )
 
 @Singleton
@@ -50,6 +54,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
         val CACHED_AD_RATE_STRING = stringPreferencesKey("cached_ad_rate_str")
         val CACHED_AD_EXPIRY = intPreferencesKey("cached_ad_expiry")
         val CACHED_AD_DELAY = longPreferencesKey("cached_ad_delay")
+        val LAST_CONFIG_FETCH_TIME = longPreferencesKey("last_config_fetch_time")
+        val CACHED_MAINTENANCE = booleanPreferencesKey("cached_maintenance")
+        val CACHED_MIN_VERSION = intPreferencesKey("cached_min_version")
+        val CACHED_TEST_USERS_JSON = stringPreferencesKey("cached_test_users_json")
     }
 
     val settingsFlow: Flow<SettingsData> = dataStore.data.map { preferences ->
@@ -71,6 +79,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             cachedAdRate = rate,
             cachedAdExpiry = preferences[CACHED_AD_EXPIRY] ?: 24,
             cachedAdDelaySeconds = preferences[CACHED_AD_DELAY] ?: 10L,
+            lastConfigFetchTime = preferences[LAST_CONFIG_FETCH_TIME] ?: 0L,
+            cachedMaintenance = preferences[CACHED_MAINTENANCE] ?: false,
+            cachedMinVersion = preferences[CACHED_MIN_VERSION] ?: 1,
+            cachedTestUsersJson = preferences[CACHED_TEST_USERS_JSON] ?: "[]",
         )
     }
 
@@ -93,6 +105,10 @@ class SettingsRepository @Inject constructor(@ApplicationContext context: Contex
             it[CACHED_AD_RATE_STRING] = config.devAdRate.toString()
             it[CACHED_AD_EXPIRY] = config.devAdExpiry
             it[CACHED_AD_DELAY] = config.devAdDelaySeconds
+            it[LAST_CONFIG_FETCH_TIME] = System.currentTimeMillis()
+            it[CACHED_MAINTENANCE] = config.maintenance
+            it[CACHED_MIN_VERSION] = config.minVersion
+            it[CACHED_TEST_USERS_JSON] = com.google.gson.Gson().toJson(config.testUsers)
         }
     }
 }

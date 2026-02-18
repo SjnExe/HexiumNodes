@@ -96,7 +96,6 @@ fun PanelScreen(
                             "Players" to Icons.Default.Person,
                             "Databases" to Icons.Default.Storage,
                             "Plugins" to Icons.Default.Extension,
-                            "Subdomains" to Icons.Default.Dns,
                             "Importer" to Icons.Default.ImportExport,
                             "Schedules" to Icons.Default.Schedule,
                             "Versions" to Icons.Default.Update,

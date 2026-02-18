@@ -40,7 +40,17 @@ interface PterodactylRepository {
 
     suspend fun getBackups(serverId: String): List<BackupData>
     suspend fun createBackup(serverId: String): BackupData
+    suspend fun deleteBackup(serverId: String, uuid: String)
+    suspend fun getBackupDownloadUrl(serverId: String, uuid: String): String
     suspend fun getAllocations(serverId: String): List<AllocationData>
+    suspend fun createAllocation(serverId: String): AllocationData
+    suspend fun deleteAllocation(serverId: String, allocationId: Int)
+    suspend fun updateAllocationNote(serverId: String, allocationId: Int, notes: String): AllocationData
+
+    suspend fun getSubdomains(serverId: String): List<SubdomainData>
+    suspend fun createSubdomain(serverId: String, domain: String): SubdomainData
+    suspend fun deleteSubdomain(serverId: String, subdomainId: Int)
+
     suspend fun getUsers(serverId: String): List<SubUserData>
     suspend fun getStartupVariables(serverId: String): List<StartupVariableData>
 
@@ -111,7 +121,35 @@ class PterodactylRepositoryImpl @Inject constructor(
 
     override suspend fun createBackup(serverId: String): BackupData = service.createBackup(serverId)
 
+    override suspend fun deleteBackup(serverId: String, uuid: String) {
+        service.deleteBackup(serverId, uuid)
+    }
+
+    override suspend fun getBackupDownloadUrl(serverId: String, uuid: String): String {
+        return service.getBackupDownloadUrl(serverId, uuid).attributes.url
+    }
+
     override suspend fun getAllocations(serverId: String): List<AllocationData> = service.getAllocations(serverId).data
+
+    override suspend fun createAllocation(serverId: String): AllocationData = service.createAllocation(serverId)
+
+    override suspend fun deleteAllocation(serverId: String, allocationId: Int) {
+        service.deleteAllocation(serverId, allocationId)
+    }
+
+    override suspend fun updateAllocationNote(serverId: String, allocationId: Int, notes: String): AllocationData {
+        return service.updateAllocationNote(serverId, allocationId, AllocationNoteRequest(notes))
+    }
+
+    override suspend fun getSubdomains(serverId: String): List<SubdomainData> = service.getSubdomains(serverId).data
+
+    override suspend fun createSubdomain(serverId: String, domain: String): SubdomainData {
+        return service.createSubdomain(serverId, CreateSubdomainRequest(domain))
+    }
+
+    override suspend fun deleteSubdomain(serverId: String, subdomainId: Int) {
+        service.deleteSubdomain(serverId, subdomainId)
+    }
 
     override suspend fun getUsers(serverId: String): List<SubUserData> = service.getUsers(serverId).data
 
@@ -149,7 +187,14 @@ class PterodactylConsoleSession(
             .header("Origin", "https://panel.hexiumnodes.cloud")
 
         if (!cookies.isNullOrBlank()) {
-            requestBuilder.header("Cookie", cookies)
+            // Filter to only include cf_clearance to avoid 403/419 errors
+            val cfClearance = cookies.split(";")
+                .map { it.trim() }
+                .find { it.startsWith("cf_clearance=") }
+
+            if (cfClearance != null) {
+                requestBuilder.header("Cookie", cfClearance)
+            }
         }
 
         val request = requestBuilder.build()

@@ -36,7 +36,14 @@ object PterodactylModule {
 
             val cookies = securePrefs.getCookies()
             if (!cookies.isNullOrBlank()) {
-                request.header("Cookie", cookies)
+                // Filter to only include cf_clearance to avoid 419 CSRF errors with stale session cookies
+                val cfClearance = cookies.split(";")
+                    .map { it.trim() }
+                    .find { it.startsWith("cf_clearance=") }
+
+                if (cfClearance != null) {
+                    request.header("Cookie", cfClearance)
+                }
             }
 
             if (!apiKey.isNullOrBlank()) {
