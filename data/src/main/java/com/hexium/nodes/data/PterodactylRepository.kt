@@ -40,7 +40,17 @@ interface PterodactylRepository {
 
     suspend fun getBackups(serverId: String): List<BackupData>
     suspend fun createBackup(serverId: String): BackupData
+    suspend fun deleteBackup(serverId: String, uuid: String)
+    suspend fun getBackupDownloadUrl(serverId: String, uuid: String): String
     suspend fun getAllocations(serverId: String): List<AllocationData>
+    suspend fun createAllocation(serverId: String): AllocationData
+    suspend fun deleteAllocation(serverId: String, allocationId: Int)
+    suspend fun updateAllocationNote(serverId: String, allocationId: Int, notes: String): AllocationData
+
+    suspend fun getSubdomains(serverId: String): List<SubdomainData>
+    suspend fun createSubdomain(serverId: String, domain: String): SubdomainData
+    suspend fun deleteSubdomain(serverId: String, subdomainId: Int)
+
     suspend fun getUsers(serverId: String): List<SubUserData>
     suspend fun getStartupVariables(serverId: String): List<StartupVariableData>
 
@@ -95,9 +105,7 @@ class PterodactylRepositoryImpl @Inject constructor(
         service.deleteFiles(serverId, DeleteFilesRequest(root, files))
     }
 
-    override suspend fun compressFiles(serverId: String, root: String, files: List<String>): FileData {
-        return service.compressFiles(serverId, CompressFilesRequest(root, files))
-    }
+    override suspend fun compressFiles(serverId: String, root: String, files: List<String>): FileData = service.compressFiles(serverId, CompressFilesRequest(root, files))
 
     override suspend fun decompressFile(serverId: String, root: String, file: String) {
         service.decompressFile(serverId, DecompressFileRequest(root, file))
@@ -111,7 +119,29 @@ class PterodactylRepositoryImpl @Inject constructor(
 
     override suspend fun createBackup(serverId: String): BackupData = service.createBackup(serverId)
 
+    override suspend fun deleteBackup(serverId: String, uuid: String) {
+        service.deleteBackup(serverId, uuid)
+    }
+
+    override suspend fun getBackupDownloadUrl(serverId: String, uuid: String): String = service.getBackupDownloadUrl(serverId, uuid).attributes.url
+
     override suspend fun getAllocations(serverId: String): List<AllocationData> = service.getAllocations(serverId).data
+
+    override suspend fun createAllocation(serverId: String): AllocationData = service.createAllocation(serverId)
+
+    override suspend fun deleteAllocation(serverId: String, allocationId: Int) {
+        service.deleteAllocation(serverId, allocationId)
+    }
+
+    override suspend fun updateAllocationNote(serverId: String, allocationId: Int, notes: String): AllocationData = service.updateAllocationNote(serverId, allocationId, AllocationNoteRequest(notes))
+
+    override suspend fun getSubdomains(serverId: String): List<SubdomainData> = service.getSubdomains(serverId).data
+
+    override suspend fun createSubdomain(serverId: String, domain: String): SubdomainData = service.createSubdomain(serverId, CreateSubdomainRequest(domain))
+
+    override suspend fun deleteSubdomain(serverId: String, subdomainId: Int) {
+        service.deleteSubdomain(serverId, subdomainId)
+    }
 
     override suspend fun getUsers(serverId: String): List<SubUserData> = service.getUsers(serverId).data
 
@@ -149,7 +179,17 @@ class PterodactylConsoleSession(
             .header("Origin", "https://panel.hexiumnodes.cloud")
 
         if (!cookies.isNullOrBlank()) {
-            requestBuilder.header("Cookie", cookies)
+            // Filter to only include Cloudflare cookies (cf_clearance, __cf_bm) to avoid 403 errors.
+            // We strictly exclude Laravel/Pterodactyl session cookies (laravel_session, XSRF-TOKEN, ptero_session)
+            // to prevent 419 CSRF errors caused by stale sessions conflicting with the API Key.
+            val allowedCookies = cookies.split(";")
+                .map { it.trim() }
+                .filter { it.startsWith("cf_clearance=") || it.startsWith("__cf_bm=") }
+                .joinToString("; ")
+
+            if (allowedCookies.isNotEmpty()) {
+                requestBuilder.header("Cookie", allowedCookies)
+            }
         }
 
         val request = requestBuilder.build()

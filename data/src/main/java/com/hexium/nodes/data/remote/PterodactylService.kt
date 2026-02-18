@@ -60,9 +60,34 @@ interface PterodactylService {
     @POST("api/client/servers/{id}/backups")
     suspend fun createBackup(@Path("id") serverId: String): BackupData
 
+    @GET("api/client/servers/{id}/backups/{uuid}/download")
+    suspend fun getBackupDownloadUrl(@Path("id") serverId: String, @Path("uuid") uuid: String): DownloadUrlResponse
+
+    @DELETE("api/client/servers/{id}/backups/{uuid}")
+    suspend fun deleteBackup(@Path("id") serverId: String, @Path("uuid") uuid: String)
+
     // Network
     @GET("api/client/servers/{id}/network/allocations")
     suspend fun getAllocations(@Path("id") serverId: String): AllocationListResponse
+
+    @POST("api/client/servers/{id}/network/allocations")
+    suspend fun createAllocation(@Path("id") serverId: String): AllocationData
+
+    @DELETE("api/client/servers/{id}/network/allocations/{allocationId}")
+    suspend fun deleteAllocation(@Path("id") serverId: String, @Path("allocationId") allocationId: Int)
+
+    @POST("api/client/servers/{id}/network/allocations/{allocationId}")
+    suspend fun updateAllocationNote(@Path("id") serverId: String, @Path("allocationId") allocationId: Int, @Body note: AllocationNoteRequest): AllocationData
+
+    // Subdomains
+    @GET("api/client/servers/{id}/subdomains")
+    suspend fun getSubdomains(@Path("id") serverId: String): SubdomainListResponse
+
+    @POST("api/client/servers/{id}/subdomains")
+    suspend fun createSubdomain(@Path("id") serverId: String, @Body request: CreateSubdomainRequest): SubdomainData
+
+    @DELETE("api/client/servers/{id}/subdomains/{subdomainId}")
+    suspend fun deleteSubdomain(@Path("id") serverId: String, @Path("subdomainId") subdomainId: Int)
 
     // Users
     @GET("api/client/servers/{id}/users")

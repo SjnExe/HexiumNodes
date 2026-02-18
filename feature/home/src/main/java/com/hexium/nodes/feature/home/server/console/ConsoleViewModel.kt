@@ -50,11 +50,17 @@ class ConsoleViewModel @Inject constructor(
     private fun handleMessage(json: String) {
         try {
             val event = gson.fromJson(json, ConsoleEvent::class.java)
-            if (event.event == "console output") {
-                event.args?.firstOrNull()?.let { log ->
-                    // Strip ANSI codes (colors, cursor movements, etc.)
-                    val cleanLog = log.replace(Regex("\u001B\\[[;?0-9]*[a-zA-Z]"), "")
-                    appendLog(cleanLog)
+            when (event.event) {
+                "console output", "install output", "daemon message" -> {
+                    event.args?.firstOrNull()?.let { log ->
+                        // Strip ANSI codes (colors, cursor movements, etc.)
+                        val cleanLog = log.replace(Regex("\u001B\\[[;?0-9]*[a-zA-Z]"), "")
+                        appendLog(cleanLog)
+                    }
+                }
+
+                "jwt error" -> {
+                    _uiState.value = _uiState.value.copy(error = "Authentication failed")
                 }
             }
         } catch (e: Exception) {

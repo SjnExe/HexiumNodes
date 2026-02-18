@@ -19,7 +19,7 @@ import com.hexium.nodes.core.model.SubUserAttributes
 @Composable
 fun UsersScreen(
     serverId: String,
-    viewModel: UsersViewModel = hiltViewModel()
+    viewModel: UsersViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -55,6 +55,6 @@ fun UserItem(user: SubUserAttributes) {
             if (user.twoFactorEnabled) {
                 Badge { Text("2FA") }
             }
-        }
+        },
     )
 }

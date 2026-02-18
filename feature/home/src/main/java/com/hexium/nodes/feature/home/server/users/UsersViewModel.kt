@@ -14,12 +14,12 @@ import javax.inject.Inject
 data class UsersUiState(
     val users: List<SubUserData> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )
 
 @HiltViewModel
 class UsersViewModel @Inject constructor(
-    private val repository: PterodactylRepository
+    private val repository: PterodactylRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UsersUiState())
     val uiState: StateFlow<UsersUiState> = _uiState.asStateFlow()

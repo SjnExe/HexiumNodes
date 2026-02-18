@@ -36,7 +36,17 @@ object PterodactylModule {
 
             val cookies = securePrefs.getCookies()
             if (!cookies.isNullOrBlank()) {
-                request.header("Cookie", cookies)
+                // Filter to only include Cloudflare cookies (cf_clearance, __cf_bm) to avoid 403 errors.
+                // We strictly exclude Laravel/Pterodactyl session cookies (laravel_session, XSRF-TOKEN, ptero_session)
+                // to prevent 419 CSRF errors caused by stale sessions conflicting with the API Key.
+                val allowedCookies = cookies.split(";")
+                    .map { it.trim() }
+                    .filter { it.startsWith("cf_clearance=") || it.startsWith("__cf_bm=") }
+                    .joinToString("; ")
+
+                if (allowedCookies.isNotEmpty()) {
+                    request.header("Cookie", allowedCookies)
+                }
             }
 
             if (!apiKey.isNullOrBlank()) {

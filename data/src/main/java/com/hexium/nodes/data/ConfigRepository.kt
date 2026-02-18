@@ -13,8 +13,31 @@ class ConfigRepository @Inject constructor(
     private val configService: ConfigService,
     private val settingsRepository: SettingsRepository,
 ) {
-    suspend fun fetchConfig(): RemoteConfig? {
-        val serverUrl = settingsRepository.settingsFlow.first().serverUrl
+    suspend fun fetchConfig(force: Boolean = false): RemoteConfig? {
+        val settings = settingsRepository.settingsFlow.first()
+        val currentTime = System.currentTimeMillis()
+        // Cache for 5 minutes (300,000 ms) to optimize API usage
+        if (!force && currentTime - settings.lastConfigFetchTime < 300000) {
+            val gson = com.google.gson.Gson()
+            val testUsersType = object : com.google.gson.reflect.TypeToken<List<com.hexium.nodes.data.model.TestUser>>() {}.type
+            val testUsers: List<com.hexium.nodes.data.model.TestUser> = try {
+                gson.fromJson(settings.cachedTestUsersJson, testUsersType)
+            } catch (e: Exception) {
+                emptyList()
+            }
+
+            return RemoteConfig(
+                devAdLimit = settings.cachedAdLimit,
+                devAdRate = settings.cachedAdRate,
+                devAdExpiry = settings.cachedAdExpiry,
+                devAdDelaySeconds = settings.cachedAdDelaySeconds,
+                maintenance = settings.cachedMaintenance,
+                minVersion = settings.cachedMinVersion,
+                testUsers = testUsers,
+            )
+        }
+
+        val serverUrl = settings.serverUrl
         // GitHub Pages deploys the contents of the 'config' folder to the root of the site.
         // So 'config.json' is accessible at the base URL + "config.json".
 

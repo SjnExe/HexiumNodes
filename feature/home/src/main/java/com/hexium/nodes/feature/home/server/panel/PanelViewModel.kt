@@ -11,6 +11,7 @@ enum class PanelScreenType {
     DASHBOARD,
     CONSOLE,
     FILES,
+
     // Add others as needed, placeholders for now
     SETTINGS,
     ACTIVITY,
@@ -25,7 +26,7 @@ enum class PanelScreenType {
     USERS,
     STARTUP,
     VERSIONS,
-    PROPERTIES
+    PROPERTIES,
 }
 
 @HiltViewModel

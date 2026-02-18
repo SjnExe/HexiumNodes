@@ -1,5 +1,6 @@
 package com.hexium.nodes.feature.home.server.files
 
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.hexium.nodes.core.model.FileData
-import android.widget.Toast
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,13 +41,13 @@ fun FileBrowserScreen(
     var createDialogType by remember { mutableStateOf("folder") } // folder or file
 
     val uploadLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(),
     ) { uri ->
         uri?.let { viewModel.uploadFile(it, andDecompress = false) }
     }
 
     val uploadZipLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
+        contract = ActivityResultContracts.GetContent(),
     ) { uri ->
         uri?.let { viewModel.uploadFile(it, andDecompress = true) }
     }
@@ -95,7 +95,7 @@ fun FileBrowserScreen(
                     }) {
                         Icon(
                             if (uiState.selectionMode) Icons.Default.Close else Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = "Back",
                         )
                     }
                 },
@@ -111,18 +111,24 @@ fun FileBrowserScreen(
                             Icon(Icons.Default.Delete, contentDescription = "Delete")
                         }
                     }
-                }
+                },
             )
         },
         floatingActionButton = {
             if (!uiState.selectionMode) {
                 ExpandableFab(
-                    onCreateFile = { showCreateDialog = true; createDialogType = "file" },
-                    onCreateFolder = { showCreateDialog = true; createDialogType = "folder" },
-                    onUploadFile = { showUploadDialog = true }
+                    onCreateFile = {
+                        showCreateDialog = true
+                        createDialogType = "file"
+                    },
+                    onCreateFolder = {
+                        showCreateDialog = true
+                        createDialogType = "folder"
+                    },
+                    onUploadFile = { showUploadDialog = true },
                 )
             }
-        }
+        },
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (uiState.isLoading) {
@@ -162,8 +168,11 @@ fun FileBrowserScreen(
                                 },
                                 onDownload = { viewModel.downloadFile(file.attributes.name) },
                                 onRename = { newName -> viewModel.renameFile(file.attributes.name, newName) },
-                                onDelete = { viewModel.toggleSelection(file.attributes.name); viewModel.deleteSelected() },
-                                onUnarchive = { viewModel.unarchiveFile(file.attributes.name) }
+                                onDelete = {
+                                    viewModel.toggleSelection(file.attributes.name)
+                                    viewModel.deleteSelected()
+                                },
+                                onUnarchive = { viewModel.unarchiveFile(file.attributes.name) },
                             )
                         }
                     }
@@ -179,7 +188,7 @@ fun FileBrowserScreen(
             onConfirm = { name ->
                 if (createDialogType == "folder") viewModel.createFolder(name) else viewModel.createFile(name)
                 showCreateDialog = false
-            }
+            },
         )
     }
 
@@ -189,10 +198,16 @@ fun FileBrowserScreen(
             title = { Text("Upload") },
             text = {
                 Column {
-                    TextButton(onClick = { showUploadDialog = false; uploadLauncher.launch("*/*") }) {
+                    TextButton(onClick = {
+                        showUploadDialog = false
+                        uploadLauncher.launch("*/*")
+                    }) {
                         Text("Upload File")
                     }
-                    TextButton(onClick = { showUploadDialog = false; uploadZipLauncher.launch("application/zip") }) {
+                    TextButton(onClick = {
+                        showUploadDialog = false
+                        uploadZipLauncher.launch("application/zip")
+                    }) {
                         Text("Upload & Extract Zip")
                     }
                 }
@@ -201,7 +216,7 @@ fun FileBrowserScreen(
                 TextButton(onClick = { showUploadDialog = false }) {
                     Text("Cancel")
                 }
-            }
+            },
         )
     }
 }
@@ -217,7 +232,7 @@ fun FileItem(
     onDownload: () -> Unit,
     onRename: (String) -> Unit,
     onDelete: () -> Unit,
-    onUnarchive: () -> Unit
+    onUnarchive: () -> Unit,
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
@@ -235,7 +250,9 @@ fun FileItem(
         supportingContent = {
             val date = try {
                 file.attributes.modifiedAt.substring(0, 10)
-            } catch (e: Exception) { "" }
+            } catch (e: Exception) {
+                ""
+            }
             val sizeText = if (file.attributes.isFile) " | ${formatSize(file.attributes.size)}" else ""
             Text(file.attributes.mode + sizeText + " | " + date)
         },
@@ -247,34 +264,52 @@ fun FileItem(
                     }
                     DropdownMenu(
                         expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                        onDismissRequest = { showMenu = false },
                     ) {
                         DropdownMenuItem(
                             text = { Text("Open") },
-                            onClick = { showMenu = false; onClick() }
+                            onClick = {
+                                showMenu = false
+                                onClick()
+                            },
                         )
                         if (file.attributes.isFile) {
                             DropdownMenuItem(
                                 text = { Text("Download") },
-                                onClick = { showMenu = false; onDownload() }
+                                onClick = {
+                                    showMenu = false
+                                    onDownload()
+                                },
                             )
                         }
                         DropdownMenuItem(
                             text = { Text("Rename") },
-                            onClick = { showMenu = false; showRenameDialog = true }
+                            onClick = {
+                                showMenu = false
+                                showRenameDialog = true
+                            },
                         )
                         DropdownMenuItem(
                             text = { Text("Delete") },
-                            onClick = { showMenu = false; onDelete() }
+                            onClick = {
+                                showMenu = false
+                                onDelete()
+                            },
                         )
                         DropdownMenuItem(
                             text = { Text("Properties") },
-                            onClick = { showMenu = false; showPropertiesDialog = true }
+                            onClick = {
+                                showMenu = false
+                                showPropertiesDialog = true
+                            },
                         )
                         if (file.attributes.name.endsWith(".zip") || file.attributes.name.endsWith(".tar.gz")) {
                             DropdownMenuItem(
                                 text = { Text("Unarchive") },
-                                onClick = { showMenu = false; onUnarchive() }
+                                onClick = {
+                                    showMenu = false
+                                    onUnarchive()
+                                },
                             )
                         }
                     }
@@ -285,8 +320,8 @@ fun FileItem(
             .background(if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f) else Color.Transparent)
             .combinedClickable(
                 onClick = onClick,
-                onLongClick = onLongClick
-            )
+                onLongClick = onLongClick,
+            ),
     )
 
     if (showRenameDialog) {
@@ -296,13 +331,16 @@ fun FileItem(
             title = { Text("Rename") },
             text = { TextField(value = newName, onValueChange = { newName = it }) },
             confirmButton = {
-                Button(onClick = { showRenameDialog = false; onRename(newName) }) {
+                Button(onClick = {
+                    showRenameDialog = false
+                    onRename(newName)
+                }) {
                     Text("Rename")
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showRenameDialog = false }) { Text("Cancel") }
-            }
+            },
         )
     }
 
@@ -326,7 +364,7 @@ fun FileItem(
             },
             confirmButton = {
                 TextButton(onClick = { showPropertiesDialog = false }) { Text("Close") }
-            }
+            },
         )
     }
 }
@@ -335,18 +373,27 @@ fun FileItem(
 fun ExpandableFab(
     onCreateFile: () -> Unit,
     onCreateFolder: () -> Unit,
-    onUploadFile: () -> Unit
+    onUploadFile: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
     Column(horizontalAlignment = Alignment.End) {
         if (expanded) {
-            FloatingActionButton(onClick = { expanded = false; onCreateFile() }, modifier = Modifier.padding(bottom = 16.dp)) {
+            FloatingActionButton(onClick = {
+                expanded = false
+                onCreateFile()
+            }, modifier = Modifier.padding(bottom = 16.dp)) {
                 Icon(Icons.AutoMirrored.Filled.NoteAdd, contentDescription = "New File")
             }
-            FloatingActionButton(onClick = { expanded = false; onCreateFolder() }, modifier = Modifier.padding(bottom = 16.dp)) {
+            FloatingActionButton(onClick = {
+                expanded = false
+                onCreateFolder()
+            }, modifier = Modifier.padding(bottom = 16.dp)) {
                 Icon(Icons.Default.CreateNewFolder, contentDescription = "New Folder")
             }
-            FloatingActionButton(onClick = { expanded = false; onUploadFile() }, modifier = Modifier.padding(bottom = 16.dp)) {
+            FloatingActionButton(onClick = {
+                expanded = false
+                onUploadFile()
+            }, modifier = Modifier.padding(bottom = 16.dp)) {
                 Icon(Icons.Default.UploadFile, contentDescription = "Upload")
             }
         }
@@ -368,7 +415,7 @@ fun CreateDialog(type: String, onDismiss: () -> Unit, onConfirm: (String) -> Uni
         },
         dismissButton = {
             TextButton(onClick = onDismiss) { Text("Cancel") }
-        }
+        },
     )
 }
 
