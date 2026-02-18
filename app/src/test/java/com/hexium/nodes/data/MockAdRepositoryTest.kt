@@ -46,6 +46,10 @@ class MockAdRepositoryTest {
             cachedAdRate = 1.0,
             cachedAdExpiry = 24,
             cachedAdDelaySeconds = 10L,
+            lastConfigFetchTime = 0L,
+            cachedMaintenance = false,
+            cachedMinVersion = 1,
+            cachedTestUsersJson = "[]",
         )
         whenever(settingsRepository.settingsFlow).thenReturn(flowOf(defaultSettings))
 
