@@ -85,6 +85,7 @@ fun CloudflareWebView(
                         // Ensure we have a valid cookie string and specifically look for cf_clearance if possible
                         // However, checking for non-null/non-empty is a good start after clearing.
                         if (!cookies.isNullOrBlank() && cookies.contains("cf_clearance")) {
+                            // Pass all cookies; the network module will filter what it needs.
                             onCookiesDetected(cookies)
                         }
                     }
